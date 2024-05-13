@@ -10,49 +10,48 @@
       Work space <span class="arrow-icon">▼</span>
     </div>
 
-<!-- 작은 메뉴 (드롭다운 목록) -->
-<div v-if="isMenuOpen" class="small-menu dropdown-menu">
-  <ul>
-    <!-- 워크스페이스 목록 -->
-    <li v-for="(ws, index) in workspaces" :key="index" @click="selectWorkspace(ws)" :class="{ selected: ws.id === selectedWorkspace?.id }">
-      {{ ws.name }}
-      <!-- 워크스페이스 삭제 버튼 -->
-      <button @click.stop="deleteWorkspace(ws.id)">🗑️</button>
-    </li>
-    <!-- 워크스페이스 추가 버튼 -->
-    <li>
-      <div class="form-group">
-        <button @click="toggleNewWorkspaceInput" class="btn btn-primary">+</button>
-        <input v-if="isNewWorkspaceInputVisible" v-model="newWorkspaceName" type="text" class="form-control" placeholder="새로운 워크스페이스 이름 입력" />
-        <button v-if="isNewWorkspaceInputVisible" @click="addNewWorkspace" class="btn btn-primary">추가</button>
-      </div>
-    </li>
-  </ul>
-</div>
-
-<!-- 문서 목록 -->
-<div v-if="selectedWorkspace" class="documents-list dropdown-menu">
-  <ul>
-    <li v-for="(doc, index) in selectedWorkspace.documents" :key="index" @click="openDocument({ workspaceId: selectedWorkspace.id, documentId: doc.id })" :style="{ backgroundColor: doc.id === selectedDocumentId ? '#f0f0f0' : 'transparent' }">
-      {{ doc.name }}
-      <!-- 문서 삭제 버튼 -->
-      <button @click.stop="deleteDocument(selectedWorkspace.id, doc.id)">🗑️</button>
-    </li>
-  </ul>
-  <!-- 문서 추가 버튼 -->
-  <div class="form-group">
-    <button @click="toggleNewDocumentInput" class="btn btn-primary">+</button>
-    <input v-if="isNewDocumentInputVisible" v-model="newDocumentName" type="text" class="form-control" placeholder="문서 이름 입력" />
-    <button v-if="isNewDocumentInputVisible" @click="addNewDocument(selectedWorkspace.id)" class="btn btn-primary">추가</button>
-  </div>
-</div>
-
-
-    <!-- 문서 편집기 -->
-    <div v-if="selectedDocumentId !== null" class="editor-container">
-      <textarea v-model="selectedDocumentContent" class="form-control" placeholder="문서 내용을 입력하세요"></textarea>
-      <button @click="saveDocumentContent" class="btn btn-primary">저장</button>
+    <!-- 작은 메뉴 (드롭다운 목록) -->
+    <div v-if="isMenuOpen" class="small-menu dropdown-menu">
+      <ul>
+        <!-- 워크스페이스 목록 -->
+        <li v-for="(ws, index) in workspaces" :key="index" @click="selectWorkspace(ws)" :class="{ selected: ws.id === selectedWorkspace?.id }">
+          {{ ws.name }}
+          <!-- 워크스페이스 삭제 버튼 -->
+          <button @click.stop="deleteWorkspace(ws.id)">🗑️</button>
+        </li>
+        <!-- 워크스페이스 추가 버튼 -->
+        <li>
+          <div class="form-group">
+            <button @click="toggleNewWorkspaceInput" class="btn btn-primary">+</button>
+            <input v-if="isNewWorkspaceInputVisible" v-model="newWorkspaceName" type="text" class="form-control" placeholder="새로운 워크스페이스 이름 입력" />
+            <button v-if="isNewWorkspaceInputVisible" @click="addNewWorkspace" class="btn btn-primary">추가</button>
+          </div>
+        </li>
+      </ul>
     </div>
+
+    <!-- 문서 목록 -->
+    <div v-if="selectedWorkspace" class="documents-list dropdown-menu">
+      <ul>
+        <li v-for="(doc, index) in selectedWorkspace.documents" :key="index" @click="openDocument({ workspaceId: selectedWorkspace.id, documentId: doc.id })" :style="{ backgroundColor: doc.id === selectedDocumentId ? '#f0f0f0' : 'transparent' }">
+          {{ doc.name }}
+          <!-- 문서 삭제 버튼 -->
+          <button @click.stop="deleteDocument(selectedWorkspace.id, doc.id)">🗑️</button>
+        </li>
+      </ul>
+      <!-- 문서 추가 버튼 -->
+      <div class="form-group">
+        <button @click="toggleNewDocumentInput" class="btn btn-primary">+</button>
+        <input v-if="isNewDocumentInputVisible" v-model="newDocumentName" type="text" class="form-control" placeholder="문서 이름 입력" />
+        <button v-if="isNewDocumentInputVisible" @click="addNewDocument(selectedWorkspace.id)" class="btn btn-primary">추가</button>
+      </div>
+    </div>
+
+<!-- 문서 편집기 -->
+<div v-if="selectedDocumentId !== null" class="editor-container">
+    <textarea v-model="selectedDocumentContent" @input="checkBlock" @keydown.enter.prevent="addNewBlock" class="form-control" placeholder="문서 내용을 입력하세요"></textarea>
+    <button @click="saveDocumentContent" class="btn btn-primary">저장</button>
+  </div>
 
     <!-- 에디터 컨테이너 -->
     <div v-if="selectedWorkspace && selectedWorkspace.currentEditor" class="editor-container">
@@ -110,7 +109,7 @@ export default {
       newDocumentName: '',
       newWorkspaceName: '',
       isNewWorkspaceInputVisible: false,
-    isNewDocumentInputVisible: false,
+      isNewDocumentInputVisible: false,
     };
   },
 
@@ -125,18 +124,18 @@ export default {
     },
 
     toggleNewWorkspaceInput() {
-    this.isNewWorkspaceInputVisible = !this.isNewWorkspaceInputVisible;
-    if (!this.isNewWorkspaceInputVisible) {
-      this.newWorkspaceName = ''; // 입력 필드 숨김시 초기화
-    }
-  },
+      this.isNewWorkspaceInputVisible = !this.isNewWorkspaceInputVisible;
+      if (!this.isNewWorkspaceInputVisible) {
+        this.newWorkspaceName = ''; // 입력 필드 숨김시 초기화
+      }
+    },
 
-  toggleNewDocumentInput() {
-    this.isNewDocumentInputVisible = !this.isNewDocumentInputVisible;
-    if (!this.isNewDocumentInputVisible) {
-      this.newDocumentName = ''; // 입력 필드 숨김시 초기화
-    }
-  },
+    toggleNewDocumentInput() {
+      this.isNewDocumentInputVisible = !this.isNewDocumentInputVisible;
+      if (!this.isNewDocumentInputVisible) {
+        this.newDocumentName = ''; // 입력 필드 숨김시 초기화
+      }
+    },
 
     addNewWorkspace() {
       if (this.newWorkspaceName.trim() !== '') {
@@ -198,23 +197,22 @@ export default {
     },
 
     openDocument({ workspaceId, documentId }) {
-  const workspace = this.workspaces.find(ws => ws.id === workspaceId);
-  if (workspace) {
-    const document = workspace.documents.find(doc => doc.id === documentId);
-    if (document) {
-      // 만약 선택된 문서와 현재 문서가 같으면 닫기
-      if (this.selectedDocumentId === documentId) {
-        this.selectedDocumentId = null;
-        this.selectedDocumentContent = '';
-      } else {
-        // 아니면 문서 열기
-        this.selectedDocumentContent = document.content;
-        this.selectedDocumentId = documentId;
+      const workspace = this.workspaces.find(ws => ws.id === workspaceId);
+      if (workspace) {
+        const document = workspace.documents.find(doc => doc.id === documentId);
+        if (document) {
+          // 만약 선택된 문서와 현재 문서가 같으면 닫기
+          if (this.selectedDocumentId === documentId) {
+            this.selectedDocumentId = null;
+            this.selectedDocumentContent = '';
+          } else {
+            // 아니면 문서 열기
+            this.selectedDocumentContent = document.content;
+            this.selectedDocumentId = documentId;
+          }
+        }
       }
-    }
-  }
-},
-
+    },
 
     saveDocumentContent() {
       if (this.selectedWorkspace && this.selectedDocumentId !== null) {
@@ -263,14 +261,37 @@ export default {
       }
       this.messages.push(message);
     },
-  },
 
+    addNewBlock(event) {
+      // 엔터 키 입력 방지 및 블록 추가 로직
+      event.preventDefault(); // 엔터 키 기본 동작 방지
+      const cursorPosition = event.target.selectionStart; // 커서 위치
+      const beforeText = this.selectedDocumentContent.substring(0, cursorPosition); // 커서 위치 이전의 텍스트
+      const afterText = this.selectedDocumentContent.substring(cursorPosition); // 커서 위치 이후의 텍스트
+      const newBlock = '\n'; // 새로운 블록
+      this.selectedDocumentContent = beforeText + newBlock + afterText; // 새로운 블록 추가
+      console.log('블록 추가'); // 콘솔에 메시지 출력
+    },
+    
+    checkBlock() {
+  // 입력된 텍스트 길이가 5의 배수인지 확인하고 블록 추가
+  const textLength = this.selectedDocumentContent.length;
+  if (textLength % 5 === 0 && textLength !== 0) {
+    // 텍스트 길이가 5의 배수이면 엔터 키 입력 없이 블록을 추가
+    const beforeText = this.selectedDocumentContent; // 커서 위치 이전의 텍스트
+    const newBlock = ''; // 새로운 블록
+    this.selectedDocumentContent = beforeText + newBlock; // 새로운 블록 추가
+    console.log('블록 추가'); // 콘솔에 메시지 출력
+  }
+}
+},
   components: {
     DocumentEditor,
     ChatComponent
   },
 };
 </script>
+
 
 
 

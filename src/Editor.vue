@@ -2,7 +2,6 @@
   <div class="document-editor">
     <h2>{{ workspaceName }}</h2>
     <textarea v-model="documentContent" placeholder="여기에 문서를 작성하세요"></textarea>
-    <button @click="saveDocument">저장</button>
   </div>
 </template>
 
@@ -31,10 +30,10 @@ export default {
     },
   },
   methods: {
-    saveDocument() {
-      // 상위 컴포넌트에 문서 저장 전달
-      this.$emit('save', this.document.id, this.documentContent);
-    },
+  saveDocument() {
+    // 상위 컴포넌트에 문서 저장 전달
+    this.$emit('save', this.document.id, this.documentContent);
+  },
   },
 };
 </script>
