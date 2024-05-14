@@ -87,6 +87,7 @@
         <ChatComponent :messages="selectedWorkspace.chatMessages" @new-message="addMessage" />
       </div>
     </div>
+    <voice-chat></voice-chat> <!-- VoiceChat 컴포넌트 추가 -->
   </div>
 </template>
 
@@ -94,6 +95,7 @@
 import DocumentEditor from './Editor.vue';
 import ChatComponent from './ChatComponent.vue';
 import { v4 as uuidv4 } from 'uuid';
+import VoiceChat from './components/VoiceChat.vue';
 
 export default {
   data() {
@@ -287,7 +289,8 @@ export default {
 },
   components: {
     DocumentEditor,
-    ChatComponent
+    ChatComponent,
+    VoiceChat
   },
 };
 </script>
