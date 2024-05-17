@@ -7,8 +7,9 @@
 
     <!-- 큰 메뉴 (드롭다운 버튼) -->
     <div @click="toggleMenu" class="big-menu dropdown-toggle">
-      Work space <span class="arrow-icon">▼</span>
-    </div>
+  Work space <span class="arrow-icon">▼</span>
+</div>
+
 
     <!-- 작은 메뉴 (드롭다운 목록) -->
     <div v-if="isMenuOpen" class="small-menu dropdown-menu">
@@ -46,14 +47,16 @@
         <button v-if="isNewDocumentInputVisible" @click="addNewDocument(selectedWorkspace.id)" class="btn btn-primary">추가</button>
       </div>
     </div>
+    </div>
 
-<!-- 문서 편집기 -->
-<div v-if="selectedDocumentId !== null" class="editor-container">
-    <textarea v-model="selectedDocumentContent" @input="checkBlock" @keydown.enter.prevent="addNewBlock" class="form-control" placeholder="문서 내용을 입력하세요"></textarea>
-    <button @click="saveDocumentContent" class="btn btn-primary">저장</button>
-  </div>
+<!-- 텍스트 편집기 -->
+<div v-if="selectedDocumentId !== null" class="editor">
+  <div class="content" contenteditable></div>
+  <button @click="saveDocumentContent" class="btn btn-primary">저장</button>
+</div>
 
-    <!-- 에디터 컨테이너 -->
+
+    <!-- 에디터 컨테이너
     <div v-if="selectedWorkspace && selectedWorkspace.currentEditor" class="editor-container">
       <DocumentEditor
         :workspace="selectedWorkspace"
@@ -61,7 +64,7 @@
         @save="saveDocument"
         @close="closeEditor"
       />
-    </div>
+    </div>-->
 
     <!-- 추가할 워크스페이스 입력 모달 -->
     <div class="modal" v-if="isAddWorkspaceModalOpen">
@@ -86,12 +89,10 @@
         <!-- 채팅 컴포넌트 추가 -->
         <ChatComponent :messages="selectedWorkspace.chatMessages" @new-message="addMessage" />
       </div>
-    </div>
-  </div>
+      </div>
 </template>
 
 <script>
-import DocumentEditor from './Editor.vue';
 import ChatComponent from './ChatComponent.vue';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -197,35 +198,28 @@ export default {
     },
 
     openDocument({ workspaceId, documentId }) {
-      const workspace = this.workspaces.find(ws => ws.id === workspaceId);
-      if (workspace) {
-        const document = workspace.documents.find(doc => doc.id === documentId);
-        if (document) {
-          // 만약 선택된 문서와 현재 문서가 같으면 닫기
-          if (this.selectedDocumentId === documentId) {
-            this.selectedDocumentId = null;
-            this.selectedDocumentContent = '';
-          } else {
-            // 아니면 문서 열기
-            this.selectedDocumentContent = document.content;
-            this.selectedDocumentId = documentId;
-          }
-        }
-      }
+  const workspace = this.workspaces.find(ws => ws.id === workspaceId);
+  if (workspace) {
+    const document = workspace.documents.find(doc => doc.id === documentId);
+    if (document) {
+      this.selectedDocumentContent = document.content;
+      this.selectedDocumentId = documentId;
+    }
+  }
     },
 
     saveDocumentContent() {
-      if (this.selectedWorkspace && this.selectedDocumentId !== null) {
-        const workspace = this.workspaces.find(ws => ws.id === this.selectedWorkspace.id);
-        if (workspace) {
-          const document = workspace.documents.find(doc => doc.id === this.selectedDocumentId);
-          if (document) {
-            document.content = this.selectedDocumentContent;
-            this.saveWorkspaceToLocalStorage(workspace);
-          }
-        }
+  if (this.selectedWorkspace && this.selectedDocumentId !== null) {
+    const workspace = this.workspaces.find(ws => ws.id === this.selectedWorkspace.id);
+    if (workspace) {
+      const document = workspace.documents.find(doc => doc.id === this.selectedDocumentId);
+      if (document) {
+        document.content = this.selectedDocumentContent; // 문서의 내용 업데이트
+        this.saveWorkspaceToLocalStorage(workspace); // 워크스페이스 정보를 로컬 스토리지에 저장
       }
-    },
+    }
+  }
+},
 
     saveWorkspaceToLocalStorage(workspace) {
       localStorage.setItem(`workspace_${workspace.id}`, JSON.stringify(workspace));
@@ -234,7 +228,8 @@ export default {
     loadDocumentsFromLocalStorage(workspaceId) {
       const savedWorkspace = localStorage.getItem(`workspace_${workspaceId}`);
       if (savedWorkspace) {
-        this.selectedWorkspace = JSON.parse(savedWorkspace);
+        const parsedWorkspace = JSON.parse(savedWorkspace); // 파싱된 워크스페이스 정보
+        this.selectedWorkspace = parsedWorkspace; // 파싱된 워크스페이스 정보로 변경
         this.selectedDocumentId = null;
         this.selectedDocumentContent = '';
       }
@@ -263,17 +258,19 @@ export default {
     },
 
     addNewBlock(event) {
-      // 엔터 키 입력 방지 및 블록 추가 로직
-      event.preventDefault(); // 엔터 키 기본 동작 방지
-      const cursorPosition = event.target.selectionStart; // 커서 위치
-      const beforeText = this.selectedDocumentContent.substring(0, cursorPosition); // 커서 위치 이전의 텍스트
-      const afterText = this.selectedDocumentContent.substring(cursorPosition); // 커서 위치 이후의 텍스트
-      const newBlock = '\n'; // 새로운 블록
-      this.selectedDocumentContent = beforeText + newBlock + afterText; // 새로운 블록 추가
-      console.log('블록 추가'); // 콘솔에 메시지 출력
-    },
+  // 엔터 키 입력 방지 및 블록 추가 로직
+  event.preventDefault(); // 엔터 키 기본 동작 방지
+
+  const cursorPosition = window.getSelection().getRangeAt(0).endOffset; // 커서 위치 가져오기
+  const beforeText = this.selectedDocumentContent.substring(0, cursorPosition); // 커서 위치 이전의 텍스트
+  const afterText = this.selectedDocumentContent.substring(cursorPosition); // 커서 위치 이후의 텍스트
+  const newBlock = '\n'; // 새로운 블록 추가
+
+  // 새로운 블록을 추가한 후의 텍스트 설정
+  this.selectedDocumentContent = beforeText + newBlock + afterText;
+},
     
-    checkBlock() {
+   /* checkBlock() {
   // 입력된 텍스트 길이가 5의 배수인지 확인하고 블록 추가
   const textLength = this.selectedDocumentContent.length;
   if (textLength % 5 === 0 && textLength !== 0) {
@@ -283,18 +280,14 @@ export default {
     this.selectedDocumentContent = beforeText + newBlock; // 새로운 블록 추가
     console.log('블록 추가'); // 콘솔에 메시지 출력
   }
-}
+} */
 },
+
   components: {
-    DocumentEditor,
-    ChatComponent
+    ChatComponent,
   },
 };
 </script>
-
-
-
-
 
 <style>
 #menu {
@@ -383,33 +376,11 @@ export default {
   background-color: #d0d0d0;
 }
 
-.editor-container {
-  margin-top: 200px;
-  margin-right: 1000px;
-  position: fixed;
-  top: 0;
-  left: 17%;
-  width: 40%;
-  height: 50%;
-  background-color: transparent;
-  border: none;
-  z-index: 100;
-  padding: 10px;
-}
-
 .new-document-button {
   position: absolute;
   top: 535px; /* 상단으로부터의 거리를 조정 */
   left: 650px; /* 왼쪽으로부터의 거리를 조정 */
   z-index: 100;
-}
-
-textarea {
-  width: 800px; /* 너비를 100%로 설정 */
-  height: 300px; /* 높이를 원하는 크기로 설정 */
-  padding: 10px; /* 내부 패딩 */
-  box-sizing: border-box; /* 패딩이 전체 크기에 포함되도록 */
-  resize: none;
 }
 
 /* 드로어 토글 버튼 스타일 */
@@ -525,4 +496,29 @@ input {
   text-decoration: none;
   cursor: pointer;
 }
+
+.editor {
+  margin-top: 200px; /* 위쪽 여백을 200px로 설정 */
+  margin-right: 500px; /* 오른쪽 여백을 1000px로 설정 */
+  position: fixed; /* 화면에 고정 */
+  top: 0; /* 화면 상단에 위치 */
+  left: 250px; /* 화면에서 왼쪽으로부터 250px 위치에 배치 */
+  width: 40%; /* 너비를 화면의 40%로 설정 */
+  height: 50%; /* 높이를 화면의 50%로 설정 */
+  background-color: transparent; /* 배경색을 투명으로 설정 */
+  border: none; /* 테두리 없음 */
+  z-index: 100; /* 다른 요소들보다 위에 표시될 z-index 값을 설정 */
+  padding: 10px; /* 내부 여백 설정 */
+  width: 792px; /* 원하는 너비로 조정 */
+  margin: 0 auto; /* 가운데 정렬을 위해 추가 */
+}
+
+.content {
+  min-height: 400px;
+  margin-top: 150px;
+  border: 2px solid #ccc; /* 테두리 두께 */
+  padding: 5px;
+  overflow-y: auto;
+}
+
 </style>
