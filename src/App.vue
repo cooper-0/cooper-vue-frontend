@@ -89,6 +89,7 @@
         <!-- 채팅 컴포넌트 추가 -->
         <ChatComponent :messages="selectedWorkspace.chatMessages" @new-message="addMessage" />
       </div>
+      <voice-chat></voice-chat> <!-- VoiceChat 컴포넌트 추가 -->
       </div>
 </template>
 
@@ -285,6 +286,7 @@ export default {
 
   components: {
     ChatComponent,
+    VoiceChat
   },
 };
 </script>
