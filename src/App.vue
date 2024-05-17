@@ -96,6 +96,7 @@
 <script>
 import ChatComponent from './ChatComponent.vue';
 import { v4 as uuidv4 } from 'uuid';
+import VoiceChat from './components/VoiceChat.vue';
 
 export default {
   data() {
