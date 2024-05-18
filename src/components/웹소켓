@@ -1,0 +1,41 @@
+/*<script>
+import { io } from 'socket.io-client';
+
+export default {
+  data() {
+    return {
+      messages: [],
+      newMessage: '',
+      socket: null,
+    };
+  },
+  mounted() {
+    // 백엔드 웹소켓에 연결
+    this.socket = io('http://localhost:8080');
+
+    // 소켓 연결 오류 처리
+    this.socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
+
+    // 메시지를 받았을 때 이벤트 핸들러(클라이언트가 서버로부터 메시지를 받았을 때 실행되는 함수)
+    this.socket.on('message', (message) => {
+      this.messages.push(message);
+      // 스크롤을 맨 아래로 이동
+      this.$nextTick(() => {
+        this.$refs.messages.scrollTop = this.$refs.messages.scrollHeight;
+      });
+    });
+  },
+  methods: {
+    sendMessage() {
+      if (this.newMessage.trim() !== '') {
+        // 메시지를 백엔드 웹소켓에 전송
+        this.socket.emit('message', this.newMessage);
+        this.newMessage = ''; // 입력 필드 초기화
+      }
+    },
+  },
+};
+</script>
+*/
