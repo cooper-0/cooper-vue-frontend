@@ -47,42 +47,58 @@
       <div class="button-container">
         <button type="submit">Sign Up</button>
       </div>
+      <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
     </form>
   </div>
 </template>
 
 <script>
+import { ref } from "vue";
 import axios from "axios";
+import { useRouter } from "vue-router"; // 최상위 레벨에서 import
 
 export default {
   name: "UserSignup",
-  data() {
-    return {
-      email: "",
-      password: "",
-      checkedPassword: "",
-      name: "",
-    };
-  },
-  methods: {
-    async signup() {
-      if (this.password !== this.checkedPassword) {
-        this.errorMessage = "비밀번호가 맞지 않습니다.";
+  setup() {
+    const email = ref("");
+    const password = ref("");
+    const checkedPassword = ref("");
+    const name = ref("");
+    const errorMessage = ref("");
+    const router = useRouter(); // setup 함수 내부에서 호출
+
+    const signup = async () => {
+      if (password.value !== checkedPassword.value) {
+        errorMessage.value = "비밀번호가 맞지 않습니다.";
         return;
       }
       try {
         const response = await axios.post("/cooper-user/signup", {
-          email: this.email,
-          password: this.password,
-          checkedPassword: this.checkedPassword,
-          name: this.name,
+          email: email.value,
+          password: password.value,
+          checkedPassword: checkedPassword.value,
+          name: name.value,
         });
         console.log("회원가입 완료:", response.data);
-        this.$router.push("/");
+        router.push("/"); // 회원가입 완료 후 라우팅
       } catch (error) {
         console.error("회원가입 실패:", error);
+        if (error.response && error.response.data) {
+          errorMessage.value = error.response.data.message;
+        } else {
+          errorMessage.value = "회원가입 중 오류가 발생했습니다.";
+        }
       }
-    },
+    };
+
+    return {
+      email,
+      password,
+      checkedPassword,
+      name,
+      errorMessage,
+      signup,
+    };
   },
 };
 </script>

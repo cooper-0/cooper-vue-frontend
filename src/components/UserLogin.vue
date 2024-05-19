@@ -24,7 +24,7 @@
       </div>
       <div class="button-container">
         <button type="submit">Login</button>
-        <button @click="$router.push('/signup')">Sign up</button>
+        <button type="button" @click="$router.push('/signup')">Sign up</button>
       </div>
       <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
     </form>
@@ -32,35 +32,41 @@
 </template>
 
 <script>
-//import axios from "axios";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+// import axios from 'axios';
 
 export default {
   name: "UserLogin",
-  data() {
-    return {
-      email: "",
-      password: "",
-      errorMessage: "",
+  setup() {
+    const email = ref("");
+    const password = ref("");
+    const errorMessage = ref("");
+    const router = useRouter();
+
+    const login = async () => {
+      // Commented out axios call for now
+      // try {
+      //   const response = await axios.post('/cooper-user/signin', {
+      //     email: email.value,
+      //     password: password.value,
+      //   });
+      //   localStorage.setItem('token', response.data.token);
+      //   router.push('/cooper');
+      // } catch (error) {
+      //   errorMessage.value = '로그인 실패: ' + (error.response.data.message || '등록되지 않은 이메일입니다');
+      //   console.error('Login failed:', error);
+      // }
+      localStorage.setItem("token", "dummy-token"); // 임의의 토큰 설정
+      router.push("/cooper"); // 다음 페이지로 이동
     };
-  },
-  methods: {
-    async login() {
-      //      try {
-      //        const response = await axios.post("/cooper-user/signin", {
-      //          email: this.email,
-      //          password: this.password,
-      //        });
-      //        localStorage.setItem("token", response.data.token);
-      //        this.$router.push("/cooper");
-      //      } catch (error) {
-      //        this.errorMessage =
-      //          "로그인이 실패:  " +
-      //          (error.response.data.message || "등록되지 않은 이메일입니다");
-      //        console.error("Login failed:", error);
-      //      }
-      localStorage.setItem("token", "dummy-token"); // 토큰을 임의로 설정
-      this.$router.push("/cooper"); // 다음 페이지로 이동
-    },
+
+    return {
+      email,
+      password,
+      errorMessage,
+      login,
+    };
   },
 };
 </script>
@@ -126,5 +132,9 @@ button {
 
 button:hover {
   background-color: blue;
+}
+
+.error-message {
+  color: red;
 }
 </style>
