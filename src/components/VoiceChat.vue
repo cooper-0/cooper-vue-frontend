@@ -9,7 +9,7 @@
         <video v-for="(stream, id) in peerConnections" :key="id" ref="remoteVideos" :srcObject="stream" autoplay playsinline controls></video>
       </div>
   
-      <!-- 동적으로 채널 목록을 렌더링 -->
+      <!-- 동적으로 채널 목록을 렌더링
       <div v-if="isChannelsOpen" class="collapse show">
         <ul class="list-unstyled fw-normal pb-1 small">
           <li v-for="channel in channels" :key="channel.id" class="link-dark rounded"
@@ -17,7 +17,7 @@
             {{ channel.name }}
           </li>
         </ul>
-      </div>
+      </div> -->
   
       <!-- 스트림 시작 제어 -->
       <div>
@@ -30,7 +30,7 @@
   
   <script>
   import { Stomp } from '@stomp/stompjs';
-  import SockJS from 'sockjs-client';
+  import SockJS from 'sockjs-client'
   
   export default {
     name: "VoiceChat",

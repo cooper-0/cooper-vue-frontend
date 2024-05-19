@@ -50,9 +50,7 @@ export default {
       //          email: this.email,
       //          password: this.password,
       //        });
-      //        const token = response.data.token;
-      //        localStorage.setItem("token", token);
-      //        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      //        localStorage.setItem("token", response.data.token);
       //        this.$router.push("/cooper");
       //      } catch (error) {
       //        this.errorMessage =
