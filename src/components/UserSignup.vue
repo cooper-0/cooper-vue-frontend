@@ -54,8 +54,8 @@
 
 <script>
 import { ref } from "vue";
-import axios from "axios";
-import { useRouter } from "vue-router"; // 최상위 레벨에서 import
+import axios from "../../node_modules/axios"; // 경로에 맞게 수정
+import { useRouter } from "vue-router";
 
 export default {
   name: "UserSignup",
@@ -65,7 +65,7 @@ export default {
     const checkedPassword = ref("");
     const name = ref("");
     const errorMessage = ref("");
-    const router = useRouter(); // setup 함수 내부에서 호출
+    const router = useRouter();
 
     const signup = async () => {
       if (password.value !== checkedPassword.value) {
@@ -80,7 +80,7 @@ export default {
           name: name.value,
         });
         console.log("회원가입 완료:", response.data);
-        router.push("/"); // 회원가입 완료 후 라우팅
+        router.push("/");
       } catch (error) {
         console.error("회원가입 실패:", error);
         if (error.response && error.response.data) {
