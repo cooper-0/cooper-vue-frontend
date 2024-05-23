@@ -9,12 +9,12 @@ module.exports = {
         pathRewrite: { '^/cooper-user': '/cooper-user' },
       },
     },
-    configureWebpack: {
-      plugins: [
-        new webpack.DefinePlugin({
-          __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: JSON.stringify(true),
-        }),
-      ],
-    },
+  },
+  configureWebpack: {
+    plugins: [
+      new webpack.DefinePlugin({
+        __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: JSON.stringify(true),
+      }),
+    ],
   },
 };

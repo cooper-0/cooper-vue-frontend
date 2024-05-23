@@ -19,7 +19,7 @@ const router = createRouter({
   routes,
 });
 
-// 네비게이션 가드 추가
+
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
     const token = localStorage.getItem('token');

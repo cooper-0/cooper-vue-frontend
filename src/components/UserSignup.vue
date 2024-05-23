@@ -103,7 +103,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 .page-title {
   color: red;
   background-color: white;
@@ -156,7 +156,7 @@ input[type="text"] {
 button {
   padding: 10px;
   width: 98%;
-  background-color: #07f;
+  background-color: rgb(177, 177, 177);
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -164,7 +164,7 @@ button {
 }
 
 button:hover {
-  background-color: blue;
+  background-color: rgb(191, 191, 191);
 }
 
 .error-message {
