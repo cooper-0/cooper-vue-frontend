@@ -222,70 +222,70 @@
   </script>
   
   <style scoped>
-  .voice-chat-panel {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 200px;
-    max-height: 300px;
-    overflow: hidden;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    z-index: 1000;
-    flex-direction: column; /* 자식 요소를 세로로 정렬 */
-  }
+.voice-chat-panel {
+  position: absolute;
+  bottom: -20px;
+  left: 0px;
+  width: 250px;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  flex-direction: column;
   
-  .voice-chat-header {
-    padding: 10px;
-    background-color: #f0f0f0;
-    text-align: center;
-  }
-  
-  .voice-chat-list {
-    overflow-y: auto;
-    padding: 10px;
-  }
-  
-  .channel {
-    display: flex;
-    align-items: center;
-    padding: 8px;
-    background-color: #e0e0e0;
-    border-radius: 4px;
-    margin-bottom: 5px;
-  }
-  
-  .active-dot,
-  .inactive-dot {
-    height: 10px;
-    width: 10px;
-    border-radius: 50%;
-    margin-right: 10px;
-  }
-  
-  .active-dot {
-    background-color: green;
-  }
-  
-  .inactive-dot {
-    background-color: red;
-  }
-  
-  .voice-chat-controls {
-    display: flex;
-    justify-content: space-around;
-    padding: 10px;
-    background-color: #f0f0f0;
-  }
-  
-  .start-button {
-    padding: 8px 15px;
-    font-size: 14px;
-    color: white;
-    background-color: #007bff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  </style>  
+}
+
+.voice-chat-header {
+  padding: 10px;
+  background-color: #f0f0f0;
+  text-align: center;
+}
+
+.voice-chat-list {
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.channel {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 5px;
+}
+
+.active-dot,
+.inactive-dot {
+  height: 10px;
+  width: 10px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.active-dot {
+  background-color: green;
+}
+
+.inactive-dot {
+  background-color: red;
+}
+
+.voice-chat-controls {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+  background-color: #f0f0f0;
+}
+
+.start-button {
+  padding: 8px 81px;
+  font-size: 14px;
+  color: white;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+</style>

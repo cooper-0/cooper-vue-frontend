@@ -1,67 +1,61 @@
 <template>
   <div id="main">
-    <div class="site-title">
-      COOPER
-    </div>
-
-    <WorkspaceList
+    <SiteLayout
       :workspaces="workspaces"
+      :selectedWorkspace="selectedWorkspace"
+      :selectedDocumentId="selectedDocumentId"
       @select-workspace="selectWorkspace"
       @add-workspace="addNewWorkspace"
       @delete-workspace="deleteWorkspace"
-    />
-    <DocumentList
-      v-if="selectedWorkspace"
-      :documents="selectedWorkspace.documents"
-      :selectedDocumentId="selectedDocumentId"
       @select-document="openDocument"
       @add-document="addNewDocument"
       @delete-document="deleteDocument"
     />
-    <DocumentEditor
-      v-if="selectedDocumentId"
-      :content="selectedDocumentContent"
-      @update-content="updateDocumentContent"
-      @save-content="saveDocumentContent"
-    />
 
-    <button v-if="selectedWorkspace" @click="toggleDrawer" class="drawer-toggle" :class="{ 'opened': isDrawerOpen }">
-  <span class="arrow-icon" :class="{ 'reversed': !isDrawerOpen }">
-    <span>▶</span>
-  </span>
-</button>
+    <div class="content-area">
+      <DocumentEditor
+        v-if="selectedDocumentId"
+        :content="selectedDocumentContent"
+        @update-content="updateDocumentContent"
+        @save-content="saveDocumentContent"
+      />
 
+      <DocumentTitle
+        v-if="selectedDocumentId"
+        :initialTitle="selectedDocumentTitle"
+        @title-updated="handleTitleUpdated"
+      />
 
-    <div :class="['drawer', { 'show': isDrawerOpen }]" v-if="selectedWorkspace">
-      <div class="drawer-content">
-        <ChatComponent
-          :messages="selectedWorkspace.chatMessages"
-          @new-message="addMessage"
-        />
+      <button v-if="selectedWorkspace" @click="toggleDrawer" class="drawer-toggle" :class="{ 'opened': isDrawerOpen }">
+        <span v-if="isDrawerOpen" class="arrow-icon">💬</span>
+<span v-else class="arrow-icon">🗨️</span>
+      </button>
+
+      <div :class="['drawer', { 'show': isDrawerOpen }]" v-if="selectedWorkspace">
+        <div class="drawer-content">
+          <ChatComponent
+            :messages="selectedWorkspace.chatMessages"
+            @new-message="addMessage"
+          />
+        </div>
       </div>
     </div>
-  </div>
-  <div>
-    <voice-chat></voice-chat>
   </div>
 </template>
 
 <script>
-import WorkspaceList from './WorkspaceList.vue';
-import DocumentList from './DocumentList.vue';
+import SiteLayout from './SiteLayout.vue';
 import DocumentEditor from './DocumentEditor.vue';
 import ChatComponent from './ChatComponent.vue';
 import { v4 as uuidv4 } from 'uuid';
-import VoiceChat from './VoiceChat.vue';
- 
+import DocumentTitle from './DocumentTitle.vue';
 
 export default {
   components: {
-    WorkspaceList,
-    DocumentList,
+    SiteLayout,
     DocumentEditor,
     ChatComponent,
-    VoiceChat
+    DocumentTitle
   },
   data() {
     return {
@@ -70,6 +64,7 @@ export default {
       selectedDocumentId: null,
       selectedDocumentContent: '',
       isDrawerOpen: false,
+      selectedDocumentTitle: ''
     };
   },
   methods: {
@@ -80,6 +75,7 @@ export default {
       this.selectedWorkspace = ws;
       this.selectedDocumentId = null;
       this.selectedDocumentContent = '';
+      this.selectedDocumentTitle = '';
       this.loadDocumentsFromLocalStorage(ws.id);
     },
     addNewWorkspace(newWorkspaceName) {
@@ -98,6 +94,9 @@ export default {
       this.workspaces = this.workspaces.filter(ws => ws.id !== id);
       if (this.selectedWorkspace && this.selectedWorkspace.id === id) {
         this.selectedWorkspace = null;
+        this.selectedDocumentId = null;
+        this.selectedDocumentContent = '';
+        this.selectedDocumentTitle = '';
       }
       this.saveWorkspacesToLocalStorage();
     },
@@ -123,6 +122,7 @@ export default {
       if (document) {
         this.selectedDocumentContent = document.content;
         this.selectedDocumentId = documentId;
+        this.selectedDocumentTitle = document.name;
       }
     },
     updateDocumentContent(content) {
@@ -133,6 +133,15 @@ export default {
         const document = this.selectedWorkspace.documents.find(doc => doc.id === this.selectedDocumentId);
         if (document) {
           document.content = this.selectedDocumentContent;
+          this.saveWorkspaceToLocalStorage(this.selectedWorkspace);
+        }
+      }
+    },
+    handleTitleUpdated(newTitle) {
+      if (this.selectedWorkspace && this.selectedDocumentId !== null) {
+        const document = this.selectedWorkspace.documents.find(doc => doc.id === this.selectedDocumentId);
+        if (document) {
+          document.name = newTitle;
           this.saveWorkspaceToLocalStorage(this.selectedWorkspace);
         }
       }
@@ -160,34 +169,34 @@ export default {
     saveWorkspacesToLocalStorage() {
       localStorage.setItem('workspaces', JSON.stringify(this.workspaces));
     },
+    loadWorkspacesFromLocalStorage() {
+      const data = localStorage.getItem('workspaces');
+      if (data) {
+        this.workspaces = JSON.parse(data);
+      }
+    }
   },
   mounted() {
-    const data = localStorage.getItem('workspaces');
-    if (data) {
-      this.workspaces = JSON.parse(data);
-    }
+    this.loadWorkspacesFromLocalStorage();
     window.addEventListener('beforeunload', this.saveWorkspacesToLocalStorage);
   },
   beforeUnmount() {
     window.removeEventListener('beforeunload', this.saveWorkspacesToLocalStorage);
-  },
+  }
 };
 </script>
 
 <style scoped>
 #main {
   display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 200px;
+  flex-direction: row;
 }
 
-.site-title {
-  width: 100%;
-  text-align: center;
-  font-size: 30px;
-  font-weight: bold;
-  margin-bottom: 10px;
+.content-area {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  flex-grow: 1;
 }
 
 .drawer-toggle {
@@ -195,21 +204,11 @@ export default {
   top: 10px;
   right: 10px;
   z-index: 101;
-  background-color: #007bff;
+  background-color: #787878;
   color: white;
   border: none;
   padding: 10px;
   cursor: pointer;
-}
-
-.drawer-toggle .arrow-icon {
-  display: inline-block;
-  transition: transform 0.3s;
-}
-
-.drawer-toggle .arrow-icon {
-  display: inline-block;
-  transition: transform 0.3s;
 }
 
 .drawer-toggle .arrow-icon.reversed {
@@ -237,6 +236,10 @@ export default {
 
 .drawer-content {
   padding: 50px;
+}
+.arrow-icon {
+  font-size: 18px;
+  transform: scaleX(-1); /* 좌우 반전 */
 }
 
 </style>

@@ -1,17 +1,14 @@
 <template>
   <div>
-    <div class="big-menu" @click="toggleMenu">Work space <span class="arrow-icon">▼</span></div>
-    <div v-if="isMenuOpen" class="small-menu" ref="smallMenu">
+    <button @click="openModal" class="add-button">Work space +</button>
+    <div class="small-menu" ref="smallMenu" :class="{ 'scrollable': workspaces.length > 4 }">
       <ul>
-        <li v-for="(workspace, index) in workspaces" :key="workspace.id" @click="selectWorkspace(workspace)">
+        <li v-for="workspace in workspaces" :key="workspace.id" 
+            @click="selectWorkspace(workspace)"
+            @contextmenu.prevent="openContextMenu($event, workspace)">
           <span class="newWorkspaceName"
-                :ref="'workspaceName' + index"
-                @mouseover="showTooltip($event, workspace.name, index)"
+                @mouseover="showTooltip($event, workspace.name)"
                 @mouseleave="hideTooltip">{{ workspace.name }}</span>
-          <button @click.stop="deleteWorkspace(workspace.id)">🗑️</button>
-        </li>
-        <li>
-          <button @click="openModal">추가</button>
         </li>
       </ul>
     </div>
@@ -22,9 +19,24 @@
 
     <Modal :is-open="isModalOpen" @close="closeModal">
       <h2>새 워크스페이스 추가</h2>
-      <input v-model="newWorkspaceName" placeholder="새 워크스페이스의 이름">
-      <button @click="addWorkspace">추가</button>
+      <input v-model="newWorkspaceName" placeholder="새 워크스페이스의 이름" maxlength="20" class="modal-input" ref="newWorkspaceInput">
+
+      <button @click="addWorkspace" class="modal-button">저장</button>
     </Modal>
+
+    <Modal :is-open="isEditModalOpen" @close="closeEditModal">
+      <h2>워크스페이스 이름 수정</h2>
+      <input v-model="editedWorkspaceName" placeholder="새로운 워크스페이스 이름" maxlength="20" class="modal-input" ref="editedWorkspaceNameInput">
+
+      <button @click="saveEditedWorkspaceName" class="modal-button">저장</button>
+    </Modal>
+
+    <div class="context-menu" v-if="contextMenuVisible" :style="contextMenuStyle">
+      <ul>
+        <li @click="editWorkspace(contextMenuWorkspace)" class="context-menu-item">수정</li>
+        <li @click="deleteWorkspace(contextMenuWorkspace.id)" class="context-menu-item">삭제</li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -41,16 +53,19 @@ export default {
   data() {
     return {
       newWorkspaceName: '',
-      isMenuOpen: false,
+      editedWorkspaceName: '',
       isModalOpen: false,
       workspaceNameTooltip: '',
-      tooltipStyle: {}
+      tooltipStyle: {},
+      contextMenuVisible: false,
+      contextMenuStyle: {},
+      contextMenuWorkspace: null,
+      isEditModalOpen: false,
     };
   },
   methods: {
     selectWorkspace(workspace) {
       this.$emit('select-workspace', workspace);
-      this.isDrawerOpen = false;
     },
     addWorkspace() {
       if (this.newWorkspaceName.trim() !== '') {
@@ -61,56 +76,79 @@ export default {
     },
     deleteWorkspace(id) {
       this.$emit('delete-workspace', id);
-      this.isDrawerOpen = false;
-    },
-    toggleMenu() {
-      this.isMenuOpen = !this.isMenuOpen;
+      this.contextMenuVisible = false;
     },
     openModal() {
       this.isModalOpen = true;
+      this.$nextTick(() => {
+        this.$refs.newWorkspaceInput.focus();
+      });
     },
     closeModal() {
       this.isModalOpen = false;
     },
     showTooltip(event, workspaceName) {
-  // 일정 시간을 기다린 후에 툴팁을 표시합니다.
-  this.tooltipTimer = setTimeout(() => {
-    const offsetX = event.clientX;
-    const offsetY = event.clientY;
-    this.tooltipStyle = {
-      left: `${offsetX}px`,
-      top: `${offsetY - 20}px`,
-      zIndex: 9999
-    };
-    this.workspaceNameTooltip = workspaceName;
-  }, 1000); // 1000 밀리초 = 1초
-},
-
-hideTooltip() {
-  // 툴팁이 나타나기 전에 마우스가 벗어났다면 타이머를 해제합니다.
-  clearTimeout(this.tooltipTimer);
-  this.workspaceNameTooltip = '';
-}
+      this.hideTooltip();
+      this.tooltipTimer = setTimeout(() => {
+        const offsetX = event.clientX;
+        const offsetY = event.clientY;
+        this.tooltipStyle = {
+          left: `${offsetX}px`,
+          top: `${offsetY - 20}px`,
+          zIndex: 9999
+        };
+        this.workspaceNameTooltip = workspaceName;
+      }, 1000);
+    },
+    hideTooltip() {
+      clearTimeout(this.tooltipTimer);
+      this.workspaceNameTooltip = '';
+    },
+    openContextMenu(event, workspace) {
+      this.contextMenuWorkspace = workspace;
+      this.contextMenuStyle = {
+        left: `${event.clientX}px`,
+        top: `${event.clientY}px`
+      };
+      this.contextMenuVisible = true;
+      document.addEventListener('click', this.closeContextMenu);
+    },
+    closeContextMenu() {
+      this.contextMenuVisible = false;
+      document.removeEventListener('click', this.closeContextMenu);
+    },
+    editWorkspace(workspace) {
+      this.contextMenuWorkspace = workspace;
+      this.editedWorkspaceName = workspace.name;
+      this.isEditModalOpen = true;
+      this.$nextTick(() => {
+        this.$refs.editedWorkspaceNameInput.focus();
+      });
+    },
+    closeEditModal() {
+      this.isEditModalOpen = false;
+    },
+    saveEditedWorkspaceName() {
+      this.contextMenuWorkspace.name = this.editedWorkspaceName;
+      this.isEditModalOpen = false;
+      this.editedWorkspaceName = '';
+    }
   }
-};
+  };
 </script>
 
 <style scoped>
-.big-menu {
-  background-color: #dcdcdc;
-  padding: 10px;
-  cursor: pointer;
-  border: 1px solid #ccc;
-}
-
-.big-menu:hover {
-  background-color: #d0d0d0;
-}
-
 .small-menu {
-  background-color: #e0e0e0;
-  padding: 10px;
-  border: 1px solid #ccc;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  max-height: calc(100vh - 500px);
+  border: 1px solid #bcbcbc;
+  border-radius: 8px;
+}
+
+.small-menu.scrollable {
+  overflow-y: auto;
 }
 
 .small-menu ul {
@@ -123,39 +161,88 @@ hideTooltip() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5px 10px;
+  padding: 12px;
   cursor: pointer;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.small-menu ul li:last-child {
+  border-bottom: none;
 }
 
 .small-menu ul li:hover {
-  background-color: #d0d0d0;
+  background-color: #e2e2e2;
 }
 
-.small-menu ul li input {
-  width: calc(100% - 40px);
-  padding: 5px 15px;
-}
-
-.small-menu ul li button {
-  margin-left: 10px;
-  padding: 5px;
-}
-
-.newWorkspaceName {
+.small-menu ul li .newWorkspaceName {
   overflow: hidden;
-  white-space: nowrap;
-  position: relative;
+  text-overflow: ellipsis;
 }
 
 .tooltip {
   position: absolute;
+  background-color: #ffffff;
+  color: #000000;
+  border-radius: 4px;
+  padding: 5px 10px;
+}
+
+.context-menu {
+  position: absolute;
   background-color: #fff;
-  border: 1px solid #ccc;
-  padding: 5px;
+  border: 1px solid #ddd;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  left: 0;
-  top: 0;
+  z-index: 9999;
+}
+
+.context-menu ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.context-menu ul li {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.context-menu ul li:hover {
+  background-color: #f0f0f0;
+}
+
+.modal-button {
+  background-color: #ffffff;
+  color: rgb(0, 0, 0);
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.modal-button:hover {
+  background-color: #9d9d9d;
+}
+
+.add-button {
+  background-color: #f0f0f0;
+  color: rgb(0, 0, 0);
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.add-button:hover {
+  background-color: #cccccc;
+}
+
+.modal-input {
+  width: calc(100% - 40px);
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 </style>
