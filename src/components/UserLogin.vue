@@ -73,7 +73,7 @@ export default {
 
 <style scoped>
 .page-title {
-  color: red;
+  color: black;
   background-color: white;
   text-align: center;
   padding: 20px 0;
@@ -123,8 +123,8 @@ input[type="password"] {
 button {
   padding: 10px;
   width: 48%;
-  background-color: rgb(201, 201, 201);
-  color: #fff;
+  background-color: #f0f0f0;
+  color: #black;
   border: none;
   border-radius: 5px;
   cursor: pointer;
