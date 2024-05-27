@@ -49,24 +49,21 @@
     },
     methods: {
         updateTitle(event) {
-  let text = event.target.textContent;
-  if (text.length > 20) {
-    event.target.textContent = text.slice(0, 20);
-    this.title = text.slice(0, 20);
-  } else {
-    this.title = text;
-  }
-  let selection = window.getSelection();
-  let range = document.createRange();
-  range.selectNodeContents(event.target);
-  range.collapse(false);
-  selection.removeAllRanges();
-  selection.addRange(range);
-  this.$emit('title-updated', this.title);
-}
-
-
-
+          let text = event.target.textContent;
+          if (text.length > 20) {
+            event.target.textContent = text.slice(0, 20);
+            this.title = text.slice(0, 20);
+          } else {
+            this.title = text;
+          }
+          let selection = window.getSelection();
+          let range = document.createRange();
+          range.selectNodeContents(event.target);
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          this.$emit('title-updated', this.title);
+        },
     },
     mounted() {
       this.$refs.titleField.innerText = this.initialTitle;
