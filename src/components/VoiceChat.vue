@@ -1,29 +1,38 @@
 <template>
+    <!-- 연결된 웹캠 스트림 목록 -->
+    <div class="connected-users">
+      <!-- 로컬 스트림을 첫 번째로 표시 -->
+      <video v-if="localStream" :srcObject="localStream" autoplay playsinline controls></video>
+      <!-- 원격 스트림 표시 -->
+      <video v-for="(stream, id) in peerConnections" :key="id" ref="remoteVideos" :srcObject="stream" autoplay playsinline controls></video>
+    </div>
+
     <div class="voice-chat-panel">
       <!-- 음성 채팅 제어 섹션 -->
       <div class="voice-chat-header">
-        <h3>음성 채널</h3>
+        <h3>{{ workspaceName }} Voice Channel</h3>
       </div>
-      <!-- 연결된 웹캠 스트림 목록 -->
-      <div class="connected-users">
-        <video v-for="(stream, id) in peerConnections" :key="id" ref="remoteVideos" :srcObject="stream" autoplay playsinline controls></video>
-      </div>
-  
-      <!-- 동적으로 채널 목록을 렌더링
-      <div v-if="isChannelsOpen" class="collapse show">
-        <ul class="list-unstyled fw-normal pb-1 small">
-          <li v-for="channel in channels" :key="channel.id" class="link-dark rounded"
-              @click="selectChannel(channel)">
-            {{ channel.name }}
+
+      <!-- 참여자 리스트 -->
+      <div class="participants-list">
+        <ul>
+          <li v-for="participant in participants" :key="participant.id">
+            {{ participant.name }}
           </li>
         </ul>
-      </div> -->
-  
-      <!-- 스트림 시작 제어 -->
-      <div>
-        <button v-if="!streamStarted" @click="startStream" class="start-button">음성채팅 시작</button>
-        <video v-if="localStream" ref="localVideo" autoplay playsinline controls></video>
-        <div ref="remoteVideos" class="remote-videos"></div>
+      </div>
+
+      <!-- 버튼 컨테이너 -->
+      <div class="buttons-container">
+        <button @click="toggleMic" class="mic-button" :class="{ 'mic-off': micMuted }">
+          {{ micMuted ? '마이크 on' : '마이크 off' }}
+        </button>
+        <button @click="toggleCamera" class="camera-button" :class="{ 'camera-off': cameraMuted }">
+            {{ cameraMuted ? '캠 on' : '캠 off' }}
+        </button>
+        <button @click="toggleStream" class="start-button">
+          {{ streamStarted ? '연결 종료' : '연결 시작' }}
+        </button>
       </div>
     </div>
   </template>
@@ -34,12 +43,13 @@
   
   export default {
     name: "VoiceChat",
+    props: ['workspaceId', 'workspaceName'],
     data() {
       return {
         localStream: null,
         myKey: Math.random().toString(36).substring(2, 11),
         pcListMap: new Map(),
-        roomId: null,
+        //roomId: null,
         otherKeyList: [],
         stompClient: null,
         videos: [],
@@ -47,6 +57,9 @@
         isChannelsOpen: false,       // 채널 목록이 열려 있는지 상태를 나타내는 불리언 값
         streamStarted: false,        // 스트림이 시작되었는지 나타내는 불리언 값
         channels: [],   // 채널 목록을 관리할 배열
+        participants: [],
+        micMuted: true,
+        cameraMuted: true,
       };
     },
     
@@ -70,7 +83,8 @@
           } catch (error) {
             console.error("Error accessing media devices:", error);
           }
-        } else {
+        }
+        else {
           console.log("Media devices are not available.");
         }
       },
@@ -82,9 +96,9 @@
   
         this.stompClient.connect({}, () => {
           console.log("Connected to WebRTC server");
-  
+
           // iceCandidate peer 교환
-          this.stompClient.subscribe(`/topic/peer/iceCandidate/${this.myKey}/${this.roomId}`, (candidate) => {
+          this.stompClient.subscribe(`/topic/peer/iceCandidate/${this.myKey}/${this.workspaceId}`, (candidate) => {
             const { key, body: message } = JSON.parse(candidate.body);
             this.pcListMap.get(key).addIceCandidate(new RTCIceCandidate({
               candidate: message.candidate,
@@ -94,7 +108,7 @@
           });
   
           // offer peer 교환
-          this.stompClient.subscribe(`/topic/peer/offer/${this.myKey}/${this.roomId}`, (offer) => {
+          this.stompClient.subscribe(`/topic/peer/offer/${this.myKey}/${this.workspaceId}`, (offer) => {
             const { key, body: message } = JSON.parse(offer.body);
             this.pcListMap.set(key, this.createPeerConnection(key));
             this.pcListMap.get(key).setRemoteDescription(new RTCSessionDescription({ type: message.type, sdp: message.sdp }));
@@ -102,7 +116,7 @@
           });
   
           // answer peer 교환
-          this.stompClient.subscribe(`/topic/peer/answer/${this.myKey}/${this.roomId}`, (answer) => {
+          this.stompClient.subscribe(`/topic/peer/answer/${this.myKey}/${this.workspaceId}`, (answer) => {
             const { key, body: message } = JSON.parse(answer.body);
             this.pcListMap.get(key).setRemoteDescription(new RTCSessionDescription(message));
           });
@@ -119,9 +133,20 @@
               this.otherKeyList.push(key);
             }
           });
+
+           // 참여자 추가 이벤트에 대한 구독
+          this.stompClient.subscribe('/topic/addParticipant', (message) => {
+            const participant = JSON.parse(message.body);
+            this.participants.push(participant);
+          });
+          // 참여자 제거 이벤트에 대한 구독
+          this.stompClient.subscribe('/topic/removeParticipant', (message) => {
+            const participantId = JSON.parse(message.body).id;
+            this.participants = this.participants.filter(p => p.id !== participantId);
+          });
         });
       },
-  
+
       onTrack(event, otherKey) {
         if (!this.videos.some(video => video.id === otherKey)) {
           this.videos.push({
@@ -144,7 +169,7 @@
       onIceCandidate(event, otherKey) {
         if (event.candidate) {
           console.log("ICE candidate");
-          this.stompClient.send(`/app/peer/iceCandidate/${otherKey}/${this.roomId}`, {}, JSON.stringify({
+          this.stompClient.send(`/app/peer/iceCandidate/${otherKey}/${this.workspaceId}`, {}, JSON.stringify({
             key: this.myKey,
             body: event.candidate
           }));
@@ -155,7 +180,7 @@
         pc.createOffer().then(offer => {
           this.setLocalAndSendMessage(pc, offer);
           this.stompClient.send(
-            `/app/peer/offer/${otherKey}/${this.roomId}`,
+            `/app/peer/offer/${otherKey}/${this.workspaceId}`,
             {},
             JSON.stringify({
               key: this.myKey,
@@ -170,7 +195,7 @@
         pc.createAnswer().then(answer => {
           this.setLocalAndSendMessage(pc, answer);
           this.stompClient.send(
-            `/app/peer/answer/${otherKey}/${this.roomId}`,
+            `/app/peer/answer/${otherKey}/${this.workspaceId}`,
             {},
             JSON.stringify({
               key: this.myKey,
@@ -187,7 +212,7 @@
   
       async channelClick(event) {
         this.roomId = event.currentTarget.getAttribute("data-channel-id");
-        console.log("Clicked Channel ID: " + this.roomId);
+        console.log("Clicked Channel ID: " + this.workspaceId);
   
         // 웹캠 시작
         await this.startCam();
@@ -217,75 +242,184 @@
           console.error("WebSocket connection is not established.");
         }
       },
+      stopStream() {
+        console.log("Disconnecting stream and peers.");
+
+        // 모든 Peer Connections 종료
+        this.pcListMap.forEach((pc, key) => {
+          pc.close(); // 각 Peer Connection을 닫음
+          console.log(`Closed connection with ${key}`);
+        });
+        this.pcListMap.clear(); // Peer Connections Map 초기화
+
+        // 로컬 스트림의 트랙을 모두 정지
+        if (this.localStream) {
+          this.localStream.getTracks().forEach(track => {
+            track.stop();
+          });
+          this.localStream = null; // 로컬 스트림 참조 제거
+        }
+
+        // WebSocket 연결 해제
+        if (this.stompClient) {
+          this.stompClient.disconnect(() => {
+            console.log("Disconnected from WebSocket server.");
+          }, {});
+        }
+
+        this.streamStarted = false; // 스트림 상태 업데이트
+      },
+
+      toggleMic() {
+        this.micMuted = !this.micMuted;
+        if (this.localStream && this.localStream.getAudioTracks().length > 0) {
+        this.localStream.getAudioTracks()[0].enabled = !this.micMuted;
+        }
+      },
+      toggleCamera() {
+        this.cameraMuted = !this.cameraMuted;
+        if (this.localStream && this.localStream.getVideoTracks().length > 0) {
+            this.localStream.getVideoTracks()[0].enabled = !this.cameraMuted;
+        }
+      },
+      toggleStream() {
+        if (this.streamStarted) {
+          this.stopStream();
+        } else {
+          this.startStream();
+        }
+      },
     }
   }
   </script>
   
   <style scoped>
-.voice-chat-panel {
-  position: absolute;
-  bottom: -20px;
-  left: 0px;
-  width: 250px;
-  max-height: 300px;
-  overflow-y: auto;
+  .connected-users {
+    position: fixed;
+    top: 0;          /* 페이지 최상단 */
+    left: 50%;       /* 페이지 중앙 */
+    transform: translateX(-50%); /* 중앙 정렬 보정 */
+    z-index: 1500;   /* 다른 요소들 위에 표시되도록 높은 z-index */
+    
+    display: flex;
+    flex-direction: row; /* 비디오를 가로로 나열 */
+    align-items: center;
+    gap: 10px;
+  }
+
+  .voice-chat-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 245px;
+    max-height: 300px;
+    overflow: hidden;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    z-index: 1000;
+    flex-direction: column; /* 자식 요소를 세로로 정렬 */
+  }
+  
+  .voice-chat-header {
+    padding: 10px;
+    background-color: #f0f0f0;
+    text-align: center;
+  }
+  
+  .voice-chat-list {
+    overflow-y: auto;
+    padding: 10px;
+  }
+  
+  .channel {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 5px;
+  }
+  
+  .voice-chat-controls {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+    background-color: #f0f0f0;
+  }
+  
+  .start-button {
+    padding: 8px 15px;
+    font-size: 14px;
+    color: white;
+    background-color: #888;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .buttons-container {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+  }
+  .participants-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin: 10px 0;
+  }
+  
+  .participants-list ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .participants-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .mic-button {
+  padding: 3px 5px;
+  font-size: 11px;
+  color: black;
   background-color: #fff;
   border: 1px solid #ccc;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  flex-direction: column;
-  
-}
-
-.voice-chat-header {
-  padding: 10px;
-  background-color: #f0f0f0;
-  text-align: center;
-}
-
-.voice-chat-list {
-  overflow-y: auto;
-  padding: 10px;
-}
-
-.channel {
+  border-radius: 0;
+  cursor: pointer;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
-  padding: 8px;
-  background-color: #e0e0e0;
-  border-radius: 4px;
-  margin-bottom: 5px;
-}
-
-.active-dot,
-.inactive-dot {
-  height: 10px;
-  width: 10px;
-  border-radius: 50%;
-  margin-right: 10px;
-}
-
-.active-dot {
-  background-color: green;
-}
-
-.inactive-dot {
-  background-color: red;
-}
-
-.voice-chat-controls {
-  display: flex;
-  justify-content: space-around;
-  padding: 10px;
-  background-color: #f0f0f0;
-}
-
-.start-button {
-  padding: 8px 81px;
-  font-size: 14px;
-  color: white;
-  background-color: #007bff;
-  border: none;
+  justify-content: center;
   border-radius: 5px;
-  cursor: pointer;
 }
-</style>
+.camera-button {
+  padding: 5px 20px;
+  font-size: 11px;
+  color: black;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 0;
+  cursor: pointer;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+}
+.mic-off {
+  background-color: #f8f8f8;
+  border: 1px solid #bbb;
+}
+
+.camera-off {
+  background-color: #f8f8f8;
+  border: 1px solid #bbb;
+
+}
+  </style>  
