@@ -34,7 +34,7 @@
 <script>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-// import axios from 'axios';
+import axios from "../node_modules/axios";
 
 export default {
   name: "UserLogin",
@@ -45,20 +45,22 @@ export default {
     const router = useRouter();
 
     const login = async () => {
-      // Commented out axios call for now
-      // try {
-      //   const response = await axios.post('/cooper-user/signin', {
-      //     email: email.value,
-      //     password: password.value,
-      //   });
-      //   localStorage.setItem('token', response.data.token);
-      //   router.push('/cooper');
-      // } catch (error) {
-      //   errorMessage.value = '로그인 실패: ' + (error.response.data.message || '등록되지 않은 이메일입니다');
-      //   console.error('Login failed:', error);
-      // }
-      localStorage.setItem("token", "dummy-token"); // 임의의 토큰 설정
-      router.push("/cooper"); // 다음 페이지로 이동
+      try {
+        const response = await axios.post("http://localhost:8000/cooper-user/signin", {
+          email: email.value,
+          password: password.value,
+        });
+        localStorage.setItem("token", response.data.token);
+        axios.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${response.data.token}`;
+        router.push("/cooper");
+      } catch (error) {
+        errorMessage.value =
+          "로그인 실패: " +
+          (error.response.data.message || "등록되지 않은 이메일입니다");
+        console.error("Login failed:", error);
+      }
     };
 
     return {
@@ -124,7 +126,7 @@ button {
   padding: 10px;
   width: 48%;
   background-color: #f0f0f0;
-  color: #black;
+  color: #000;
   border: none;
   border-radius: 5px;
   cursor: pointer;

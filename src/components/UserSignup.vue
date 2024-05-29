@@ -24,7 +24,7 @@
         />
       </div>
       <div class="form-group">
-        <label for="checkedPassword">Confirm Password:</label>
+        <label for="checkedPassword">Checked Password:</label>
         <input
           v-model="checkedPassword"
           type="password"
@@ -54,7 +54,7 @@
 
 <script>
 import { ref } from "vue";
-import axios from "../../node_modules/axios"; // 경로에 맞게 수정
+import axios from "../node_modules/axios"; // 경로에 맞게 수정
 import { useRouter } from "vue-router";
 
 export default {
@@ -68,12 +68,17 @@ export default {
     const router = useRouter();
 
     const signup = async () => {
+      if (password.value.length < 8){
+        errorMessage.value = "비밀번호를 8자 이상으로 입력해주세요";
+        return;
+      }
       if (password.value !== checkedPassword.value) {
         errorMessage.value = "비밀번호가 맞지 않습니다.";
         return;
       }
+
       try {
-        const response = await axios.post("/cooper-user/signup", {
+        const response = await axios.post("http://localhost:8000/cooper-user/signup", {
           email: email.value,
           password: password.value,
           checkedPassword: checkedPassword.value,
@@ -105,7 +110,7 @@ export default {
 
 <style scoped>
 .page-title {
-  color: red;
+  color: black;
   background-color: white;
   text-align: center;
   padding: 20px 0;
