@@ -53,7 +53,8 @@
     },
     methods: {
       connectWebSocket() {
-        const socket = new SockJS('/ws/workspace');
+        const socket = new SockJS('http://221.144.190.76:8000/ws/workspace');
+
         this.stompClient = Stomp.over(socket);
         this.stompClient.connect({}, () => {
           this.stompClient.subscribe(`/sub/workspace/${this.selectedWorkspace.name}`, (message) => {
