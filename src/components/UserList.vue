@@ -43,7 +43,7 @@
           { id: 6, name: "박세민"},
           { id: 7, name: "박상훈"},
           { id: 8, name: "김창화"},
-          { id: 9, name: "김은서"}
+          { id: 9, name: "김은서"},
         ], // UI 테스트용
         currentUsers: [],
         selectedWorkspace: {},
