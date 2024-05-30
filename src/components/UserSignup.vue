@@ -54,7 +54,7 @@
 
 <script>
 import { ref } from "vue";
-import axios from "../node_modules/axios"; // 경로에 맞게 수정
+import axios from "../axios"; // 경로에 맞게 수정
 import { useRouter } from "vue-router";
 
 export default {
@@ -78,7 +78,7 @@ export default {
       }
 
       try {
-        const response = await axios.post("http://localhost:8000/cooper-user/signup", {
+        const response = await axios.post("/cooper-user/signup", {
           email: email.value,
           password: password.value,
           checkedPassword: checkedPassword.value,

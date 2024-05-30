@@ -4,7 +4,7 @@ module.exports = {
   devServer: {
     proxy: {
       '/cooper-user': {
-        target: 'http://localhost:8000',
+        target: 'http://221.144.190.76:8000',
         changeOrigin: true,
         pathRewrite: { '^/cooper-user': '/cooper-user' },
       },
