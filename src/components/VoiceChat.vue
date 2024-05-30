@@ -1,12 +1,4 @@
 <template>
-    <!-- 연결된 웹캠 스트림 목록 -->
-    <div class="connected-users">
-      <!-- 로컬 스트림을 첫 번째로 표시 -->
-      <video v-if="localStream" :srcObject="localStream" autoplay playsinline controls></video>
-      <!-- 원격 스트림 표시 -->
-      <video v-for="(stream, id) in peerConnections" :key="id" ref="remoteVideos" :srcObject="stream" autoplay playsinline controls></video>
-    </div>
-
     <div class="voice-chat-panel">
       <!-- 음성 채팅 제어 섹션 -->
       <div class="voice-chat-header">

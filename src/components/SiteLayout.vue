@@ -27,21 +27,6 @@
         <span v-if="isDrawerOpen">❮</span>
         <span v-else>❯</span>
       </div>
-    </div>
-    
-    <div class="webcam-container">
-      <div v-if="isChatVisible && selectedWorkspace" class="connected-users">
-        <!-- 로컬 스트림을 첫 번째로 표시 -->
-        <video v-if="localStream" :srcObject="localStream" autoplay playsinline controls></video>
-        <!-- 원격 스트림 표시 -->
-        <video v-for="(stream, id) in peerConnections" :key="id" ref="remoteVideos" :srcObject="stream" autoplay playsinline controls></video>
-
-        <!-- 웹캠 리스트 뷰에 어떻게 나오는지 보려고 테스트--> 
-        <video ref="localVideo" autoplay playsinline controls></video>
-        <video autoplay playsinline controls></video>
-        <video autoplay playsinline controls></video>
-        <video autoplay playsinline controls></video>
-      </div>
     </div>     
 
     <div class="right-layout" :class="{ 'right-layout-open': isDrawerOpen }">
@@ -179,27 +164,6 @@ export default {
   margin-left: 0; /* 드로어가 열렸을 때 마진을 0으로 설정하여 드로어가 보이도록 함 */
 }
 
-.webcam-container {
-  position: absolute; /* 절대 위치 지정 */
-  top: 80px; /* 헤더 아래 적절한 위치에 배치, 필요에 따라 조정 */
-  left: 255px;
-  right: 0;
-  height: 22%; /* 웹캠 스트림 영역의 높이 */
-  overflow-y: hidden; /* 스크롤 방지 */
-  background-color: #ffffff;
-}
-.connected-users {
-  position: absolute;
-  top: 0;          /* 페이지 최상단 */
-  left: 0;
-  right:0;
-
-  display: flex;
-  flex-direction: row; /* 비디오를 가로로 나열 */
-  align-items: center;
-  gap: 10px;
-  background-color: #f0f0f0;
-}
 .voice-chat {
   z-index: 500;
 }

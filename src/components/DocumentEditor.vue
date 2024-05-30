@@ -61,7 +61,6 @@ export default {
   top: 100px;
   width: 1097px;
   box-sizing: border-box;
-  margin-top: 150px;
 }
 
 .content {

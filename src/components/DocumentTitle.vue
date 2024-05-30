@@ -77,7 +77,7 @@
   <style scoped>
   .document-title {
     position: absolute;
-    top: 5px;
+    top: 50px;
     width: 100%;
     max-width: 850px;
     background-color: #fff;
