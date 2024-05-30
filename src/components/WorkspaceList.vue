@@ -67,26 +67,33 @@ export default {
     selectWorkspace(workspace) {
       this.$emit('select-workspace', workspace);
     },
+
     addWorkspace() {
       if (this.newWorkspaceName.trim() !== '') {
         this.$emit('add-workspace', this.newWorkspaceName);
         this.newWorkspaceName = '';
         this.closeModal();
+      } else {
+        alert("워크스페이스 이름을 입력하세요.");
       }
     },
+
     deleteWorkspace(id) {
       this.$emit('delete-workspace', id);
       this.contextMenuVisible = false;
     },
+
     openModal() {
       this.isModalOpen = true;
       this.$nextTick(() => {
         this.$refs.newWorkspaceInput.focus();
       });
     },
+
     closeModal() {
       this.isModalOpen = false;
     },
+
     showTooltip(event, workspaceName) {
       this.hideTooltip();
       this.tooltipTimer = setTimeout(() => {
@@ -100,10 +107,12 @@ export default {
         this.workspaceNameTooltip = workspaceName;
       }, 1000);
     },
+
     hideTooltip() {
       clearTimeout(this.tooltipTimer);
       this.workspaceNameTooltip = '';
     },
+
     openContextMenu(event, workspace) {
       this.contextMenuWorkspace = workspace;
       this.contextMenuStyle = {
@@ -113,10 +122,12 @@ export default {
       this.contextMenuVisible = true;
       document.addEventListener('click', this.closeContextMenu);
     },
+
     closeContextMenu() {
       this.contextMenuVisible = false;
       document.removeEventListener('click', this.closeContextMenu);
     },
+
     editWorkspace(workspace) {
       this.contextMenuWorkspace = workspace;
       this.editedWorkspaceName = workspace.name;
@@ -125,14 +136,16 @@ export default {
         this.$refs.editedWorkspaceNameInput.focus();
       });
     },
+
     closeEditModal() {
       this.isEditModalOpen = false;
     },
+
     saveEditedWorkspaceName() {
       this.contextMenuWorkspace.name = this.editedWorkspaceName;
       this.isEditModalOpen = false;
       this.editedWorkspaceName = '';
-    }
+    },
   }
   };
 </script>

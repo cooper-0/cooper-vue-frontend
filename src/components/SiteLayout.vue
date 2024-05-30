@@ -15,8 +15,8 @@
         
         <DocumentList
           v-if="isDocumentListVisible && selectedWorkspace"
-          :documents="selectedWorkspace.documents"
-          :selectedDocumentId="selectedDocumentId"
+          :documents="documents"
+          :selectedDocument="selectedDocument"
           @select-document="openDocument"
           @add-document="addNewDocument"
           @delete-document="deleteDocument"
@@ -30,8 +30,8 @@
     </div>     
 
     <div class="right-layout" :class="{ 'right-layout-open': isDrawerOpen }">
-      <DocumentTitle v-if="isDrawerOpen && selectedDocumentId" />
-      <DocumentEditor v-if="isDrawerOpen && selectedDocumentId" />
+      <DocumentTitle v-if="isDrawerOpen && selectedDocument" />
+      <DocumentEditor v-if="isDrawerOpen && selectedDocument" />
     </div>
     <div class="voice-chat">
     <VoiceChat v-if="isChatVisible && selectedWorkspace" />
@@ -56,8 +56,11 @@ export default {
   },
   props: {
     workspaces: Array,
+    documents: Array,
     selectedWorkspace: Object,
-    selectedDocumentId: String
+    selectedDocument: Object,
+    connectionStateWs: Object,
+    connectionStateDoc: Object,
   },
   data() {
     return {
@@ -74,6 +77,7 @@ export default {
       }
     },
     toggleDocumentList(ws) {
+      // 동일한 워크스페이스를 한 번 더 클릭하는 경우 이 부분이 실행됨
       if (this.selectedWorkspace && this.selectedWorkspace.id === ws.id) {
         this.isDocumentListVisible = !this.isDocumentListVisible;
       } else {
@@ -88,8 +92,8 @@ export default {
     deleteWorkspace(id) {
       this.$emit('delete-workspace', id);
     },
-    openDocument(documentId) {
-      this.$emit('select-document', documentId);
+    openDocument(document) {
+      this.$emit('select-document', document);
     },
     addNewDocument(newDocumentName) {
       this.$emit('add-document', newDocumentName);

@@ -4,13 +4,13 @@
       <button @click="openModal" class="add-button">Document + </button>
       <div class="document-list">
         <ul>
-          <li v-for="(document, index) in documents" :key="document.id" @contextmenu.prevent="openDocumentContextMenu($event, document)">
+          <li v-for="(document, index) in documents" :key="document.doc.id" @contextmenu.prevent="openDocumentContextMenu($event, document.doc)">
             <span class="newDocumentName"
                   :ref="'documentName' + index"
-                  @mouseover="startTooltipTimer($event, document.name, index)"
+                  @mouseover="startTooltipTimer($event, document.doc.name, index)"
                   @mouseleave="hideTooltip"
-                  @click="selectDocument(document.id)">
-              {{ document.name }}
+                  @click="openDocument(document.doc)">
+              {{ document.doc.name }}
             </span>
           </li>
         </ul>
@@ -42,9 +42,11 @@ export default {
   components: {
     Modal
   },
+
   props: {
     documents: Array,
   },
+
   data() {
     return {
       isModalOpen: false,
@@ -57,36 +59,46 @@ export default {
       tooltipTimer: null
     };
   },
+
   mounted() {
     document.addEventListener('click', this.handleOutsideClick);
   },
+
   beforeUnmount() {
     document.removeEventListener('click', this.handleOutsideClick);
   },
+
   methods: {
-    selectDocument(id) {
-      this.$emit('select-document', id);
+    openDocument(document) {
+      this.$emit('select-document', document);
     },
+
     addDocument() {
       if (this.newDocumentName.trim() !== '') {
         this.$emit('add-document', this.newDocumentName);
         this.newDocumentName = '';
         this.closeModal();
+      } else {
+        alert("문서 이름을 입력하세요.");
       }
     },
+
     deleteDocument(id) {
       this.$emit('delete-document', id);
       this.closeContextMenu();
     },
+
     openModal() {
       this.isModalOpen = true;
       this.$nextTick(() => {
         this.$refs.newDocumentInput.focus();
       });
     },
+
     closeModal() {
       this.isModalOpen = false;
     },
+
     startTooltipTimer(event, documentName) {
       if (this.tooltipTimer) {
         clearTimeout(this.tooltipTimer);
@@ -102,11 +114,13 @@ export default {
         this.documentNameTooltip = documentName;
       }, 1000);
     },
+
     hideTooltip() {
       clearTimeout(this.tooltipTimer);
       this.tooltipTimer = null;
       this.documentNameTooltip = '';
     },
+
     openDocumentContextMenu(event, document) {
       this.contextMenuDocument = document;
       this.contextMenuStyle = {
@@ -115,9 +129,11 @@ export default {
       };
       this.contextMenuVisible = true;
     },
+
     closeContextMenu() {
       this.contextMenuVisible = false;
     },
+
     handleOutsideClick(event) {
       if (this.contextMenuVisible && !this.$el.contains(event.target)) {
         this.closeContextMenu();
