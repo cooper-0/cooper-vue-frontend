@@ -78,7 +78,7 @@
     width: 100%;
     max-width: 850px;
     background-color: #fff;
-    padding: 5px 10px;
+    padding: 5px 5px;
     box-sizing: border-box;
     border-bottom: 1px solid #ccc;
     z-index: 1;
@@ -87,7 +87,7 @@
   .editable-title {
     max-width: 100%;
     width: 100%;
-    margin: 0;
+    margin: 1px;
   }
   </style>
   

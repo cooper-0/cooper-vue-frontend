@@ -30,6 +30,8 @@
         @title-updated="handleTitleUpdated"
       />
 
+      <UserList v-if="selectedWorkspace" />
+
       <button v-if="selectedWorkspace" @click="toggleDrawer" class="drawer-toggle" :class="{ 'opened': isDrawerOpen }">
         <span v-if="isDrawerOpen" class="arrow-icon">💬</span>
         <span v-else class="arrow-icon">🗨️</span>
@@ -55,13 +57,15 @@ import { v4 as uuidv4 } from 'uuid';
 import DocumentTitle from './DocumentTitle.vue';
 import Stomp from 'webstomp-client'
 import SockJS from 'sockjs-client'
+import UserList from './UserList.vue';
 
 export default {
   components: {
     SiteLayout,
     DocumentEditor,
     ChatComponent,
-    DocumentTitle
+    DocumentTitle,
+    UserList,
   },
   data() {
     return {

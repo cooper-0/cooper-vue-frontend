@@ -27,14 +27,15 @@
         <span v-if="isDrawerOpen">❮</span>
         <span v-else>❯</span>
       </div>
-    </div>
-    
+    </div>     
+
     <div class="right-layout" :class="{ 'right-layout-open': isDrawerOpen }">
       <DocumentTitle v-if="isDrawerOpen && selectedDocument" />
       <DocumentEditor v-if="isDrawerOpen && selectedDocument" />
     </div>
-    
+    <div class="voice-chat">
     <VoiceChat v-if="isChatVisible && selectedWorkspace" />
+    </div>
   </div>
 </template>
 
@@ -122,6 +123,7 @@ export default {
 
 .left-layout-open {
   width: 0 !important; /* !important를 사용하여 스타일 우선순위 높임 */
+
 }
 
 .site-layout {
@@ -159,9 +161,14 @@ export default {
   background-color: #fff;
   transition: margin-left 0.3s ease;
   margin-left: -240px; /* 기본 마진을 240px로 설정하여 왼쪽 레이아웃의 너비와 맞춤 */
+  margin-top: 300px; /* 웹캠 컨테이너 높이에 맞춰 상단 마진 조정 */
 }
 
 .right-layout-open {
   margin-left: 0; /* 드로어가 열렸을 때 마진을 0으로 설정하여 드로어가 보이도록 함 */
+}
+
+.voice-chat {
+  z-index: 500;
 }
 </style>
