@@ -2,7 +2,7 @@ import UserLogin from '../components/UserLogin.vue';
 import UserSignup from '../components/UserSignup.vue';
 import CooperMain from '../components/CooperMain.vue';
 import { createRouter, createWebHistory } from 'vue-router';
-import axios from '../../node_modules/axios';
+// import axios from '../../node_modules/axios';
 
 const routes = [
   { path: '/', name: 'UserLogin', component: UserLogin },
@@ -26,7 +26,7 @@ router.beforeEach((to, from, next) => {
     if (!token) {
       next({ path: '/' });
     } else {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      // axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       next();
     }
   } else {

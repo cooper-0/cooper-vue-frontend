@@ -34,7 +34,7 @@
 <script>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import axios from "../node_modules/axios";
+import axios from "../axios";
 
 export default {
   name: "UserLogin",
@@ -46,7 +46,7 @@ export default {
 
     const login = async () => {
       try {
-        const response = await axios.post("http://localhost:8000/cooper-user/signin", {
+        const response = await axios.post("/cooper-user/signin", {
           email: email.value,
           password: password.value,
         });

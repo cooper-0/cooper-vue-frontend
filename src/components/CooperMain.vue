@@ -58,6 +58,7 @@ import DocumentTitle from './DocumentTitle.vue';
 import Stomp from 'webstomp-client'
 import SockJS from 'sockjs-client'
 import UserList from './UserList.vue';
+import axios from '../axios';
 
 export default {
   components: {
@@ -85,7 +86,7 @@ export default {
       // 임시 userId 설정
       this.userId = uuidv4();
 
-      const serverURL = 'http://localhost:8000/ws/workspace';
+      const serverURL = 'http://221.144.190.76:8000/ws/workspace';
       let socket = new SockJS(serverURL);
       this.stompClient = Stomp.over(socket);
 
@@ -185,7 +186,7 @@ export default {
         const fd = new FormData();
         fd.append('name', newWorkspace.name);
 
-        this.axios.post(`/cooper-docs/workspace/${newWorkspace.id}`, fd).then(result => {
+        axios.post(`/cooper-docs/workspace/${newWorkspace.id}`, fd).then(result => {
           this.workspaces = result.data;
           // 전체 접속자들에게 워크스페이스 생성 메시지 전송
           this.stompClient.send(`/pub/workspace`, JSON.stringify({type: "workspace", userId: this.userId, workspaces: result.data, workspaceId: newWorkspace.id}), {});
@@ -203,7 +204,7 @@ export default {
       }
 
       // MySQL 연동
-      this.axios.delete(`/cooper-docs/workspace/${id}`).then(result => {
+      axios.delete(`/cooper-docs/workspace/${id}`).then(result => {
         this.workspaces = result.data;
         // 전체 접속자들에게 워크스페이스 삭제 메시지 전송
         this.stompClient.send(`/pub/workspace`, JSON.stringify({type: "workspace", userId: this.userId, workspaces: result.data, workspaceId: id}), {});
@@ -220,7 +221,7 @@ export default {
         // MySQL 연동
         const fd = new FormData();
         fd.append('doc_name', newDocument.name);
-        this.axios.post(`/cooper-docs/workspace/${this.selectedWorkspace.id}/document/${newDocument.id}`, fd).then(result => {
+        axios.post(`/cooper-docs/workspace/${this.selectedWorkspace.id}/document/${newDocument.id}`, fd).then(result => {
           this.documents = result.data;
           // 전체 접속자들에게 문서 생성 메시지 전송
           this.stompClient.send(`/pub/workspace`, JSON.stringify({type: "document", userId: this.userId, documents: result.data, workspaceId: this.selectedWorkspace.id}), {});
@@ -245,7 +246,7 @@ export default {
         // 각 문서에 대한 웹소켓 연결
         this.doc_connect(this.selectedWorkspace.id, document.id);
 
-        this.axios.get(`/cooper-docs/workspace/${this.selectedWorkspace.id}/document/${document.id}`).then(result => {
+        axios.get(`/cooper-docs/workspace/${this.selectedWorkspace.id}/document/${document.id}`).then(result => {
           // 빈 문서라면(=블록이 하나도 없다면) 기본 블록 추가
           if (result.data.length === 0) {
             this.lines = [];
@@ -265,7 +266,7 @@ export default {
       }
 
       // MySQL 연동
-      this.axios.delete(`/cooper-docs/workspace/${this.selectedWorkspace.id}/document/${documentId}`).then(result => {
+      axios.delete(`/cooper-docs/workspace/${this.selectedWorkspace.id}/document/${documentId}`).then(result => {
         this.documents = result.data;
         // 워크스페이스 웹소켓 구독자들에게 문서 삭제 메시지 전송
         this.stompClient.send(`/pub/workspace`, JSON.stringify({type: "document", userId: this.userId, documents: result.data, workspaceId: this.selectedWorkspace.id, documentId: documentId}), {});
@@ -289,14 +290,16 @@ export default {
 
     // MySQL에서 저장된 워크스페이스를 불러오는 함수
     loadWorkspaces() {
-      this.axios.get(`/cooper-docs/workspace`).then(result => {
+      console.log(this.axios);
+
+      axios.get(`/cooper-docs/workspace`).then(result => {
         this.workspaces = result.data;
       })
     },
 
     // MySQL에서 워크스페이스의 문서 목록을 불러오는 함수
     loadDocuments(workspaceId) {
-      this.axios.get(`/cooper-docs/workspace/${workspaceId}/document`).then(result => {
+      axios.get(`/cooper-docs/workspace/${workspaceId}/document`).then(result => {
         this.documents = result.data;
       });
     },

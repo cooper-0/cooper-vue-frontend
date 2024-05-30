@@ -2,16 +2,15 @@ const webpack = require('webpack');
 
 module.exports = {
   devServer: {
-    port: 3030,
     proxy: {
       '/cooper-docs': {
-        target: "http://localhost:8000",
+        target: "http://221.144.190.76:8000",
         changeOrigin: true,
         ws: false,
       },
 
       '/cooper-user': {
-        target: 'http://localhost:8000',
+        target: 'http://221.144.190.76:8000',
         changeOrigin: true,
         pathRewrite: { '^/cooper-user': '/cooper-user' },
       },
