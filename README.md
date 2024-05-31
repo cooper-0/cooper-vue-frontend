@@ -7,19 +7,13 @@
 
 이메일, 비밀번호, 비밀번호 확인, 이름을 입력 받아 회원가입 합니다.
 
-/cooper
-
-워크 스페이스, 실시간 공유 수정 문서, 채팅방, 음성 채팅의 UI가 구현되어 있습니다.
-
-/
-
 
 https://github.com/cooper-0/cooper-vue-frontend/assets/151529191/e5ed8e53-720e-486f-8103-1c6cfe62d4b2
 
 
-
-
 /cooper
+
+워크 스페이스, 실시간 공유 수정 문서, 채팅방, 음성 채팅의 UI가 구현되어 있습니다.
 
 
 https://github.com/cooper-0/cooper-vue-frontend/assets/151529191/9d8c478b-acf4-468b-9b2d-1f7a6c5a6bc7
