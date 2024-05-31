@@ -11,13 +11,10 @@ https://github.com/cooper-0/cooper-vue-frontend/assets/151529191/e5ed8e53-720e-4
 /cooper
 
 
+https://github.com/cooper-0/cooper-vue-frontend/assets/151529191/9d8c478b-acf4-468b-9b2d-1f7a6c5a6bc7
 
 
 https://github.com/cooper-0/cooper-vue-frontend/assets/151529191/db439139-1013-43b1-93eb-5035d98a2f0d
-
-
-
-https://github.com/cooper-0/cooper-vue-frontend/assets/151529191/9d8c478b-acf4-468b-9b2d-1f7a6c5a6bc7
 
 
 
