@@ -3,12 +3,12 @@
     <button @click="openModal" class="add-button">Work space +</button>
     <div class="small-menu" ref="smallMenu" :class="{ 'scrollable': workspaces.length > 4 }">
       <ul>
-        <li v-for="workspace in workspaces" :key="workspace.id" 
+        <li v-for="workspace in workspaces" :key="workspace.id"
             @click="selectWorkspace(workspace)"
             @contextmenu.prevent="openContextMenu($event, workspace)">
           <span class="newWorkspaceName"
                 @mouseover="showTooltip($event, workspace.name)"
-                @mouseleave="hideTooltip">{{ workspace.name }}</span>
+                @mouseleave="hideTooltip">{{ workspace.name}}</span>
         </li>
       </ul>
     </div>
@@ -42,6 +42,8 @@
 
 <script>
 import Modal from '@/components/Modal.vue';
+import axios from "axios";
+
 
 export default {
   components: {
@@ -50,6 +52,7 @@ export default {
   props: {
     workspaces: Array
   },
+
   data() {
     return {
       newWorkspaceName: '',
@@ -68,20 +71,45 @@ export default {
       this.$emit('select-workspace', workspace);
     },
 
+    //addWorkspace() 수정 - 엔드포인트 사용하여 새로 워크스페이스 생성 시 몽고DB 채팅방 컬렉션 생성
     addWorkspace() {
       if (this.newWorkspaceName.trim() !== '') {
-        this.$emit('add-workspace', this.newWorkspaceName);
-        this.newWorkspaceName = '';
-        this.closeModal();
-      } else {
-        alert("워크스페이스 이름을 입력하세요.");
+        axios.post('http://localhost:8080/cooper-chat/create', null, { params: { roomId: this.newWorkspaceName } }) // 채팅방 생성을 요청
+            .then(response => {
+              // 응답 처리
+              console.log(response.data);
+              this.$emit('add-workspace', this.newWorkspaceName);// 응답 내용 로그 출력
+              this.newWorkspaceName = ''; // 입력 필드 초기화
+              this.closeModal(); // 모달 닫기
+              return response;
+            })
+            .catch(error => {
+              console.error('생성 실패:', error);
+
+            });
+      }
+    },
+    //워크스페이스 삭제 시 동일한 이름의 컬렉션 삭제
+    deleteWorkspace(workspaceId) {
+      // 해당 ID의 워크스페이스를 찾습니다.
+      const workspace = this.workspaces.find(ws => ws.id === workspaceId);
+
+      // 사용자에게 삭제할지 확인 메시지를 표시
+      if (workspace && confirm(`'${workspace.name}' 워크스페이스를 삭제하시겠습니까?`)) {
+        // 사용자가 확인을 눌렀을 때만 삭제 작업을 수행
+        axios.delete('http://localhost:8080/cooper-chat/deleteRoom', { params: { roomId: workspace.name } })
+            .then(response => {
+              console.log(response.data);
+              // 삭제된 워크스페이스 ID를 부모 컴포넌트에 전달
+              this.$emit('delete-workspace', workspaceId);
+              this.contextMenuVisible = false;
+            })
+            .catch(error => {
+              console.error('삭제 실패:', error);
+            });
       }
     },
 
-    deleteWorkspace(id) {
-      this.$emit('delete-workspace', id);
-      this.contextMenuVisible = false;
-    },
 
     openModal() {
       this.isModalOpen = true;
@@ -89,11 +117,9 @@ export default {
         this.$refs.newWorkspaceInput.focus();
       });
     },
-
     closeModal() {
       this.isModalOpen = false;
     },
-
     showTooltip(event, workspaceName) {
       this.hideTooltip();
       this.tooltipTimer = setTimeout(() => {
@@ -107,12 +133,10 @@ export default {
         this.workspaceNameTooltip = workspaceName;
       }, 1000);
     },
-
     hideTooltip() {
       clearTimeout(this.tooltipTimer);
       this.workspaceNameTooltip = '';
     },
-
     openContextMenu(event, workspace) {
       this.contextMenuWorkspace = workspace;
       this.contextMenuStyle = {
@@ -122,12 +146,10 @@ export default {
       this.contextMenuVisible = true;
       document.addEventListener('click', this.closeContextMenu);
     },
-
     closeContextMenu() {
       this.contextMenuVisible = false;
       document.removeEventListener('click', this.closeContextMenu);
     },
-
     editWorkspace(workspace) {
       this.contextMenuWorkspace = workspace;
       this.editedWorkspaceName = workspace.name;
@@ -136,18 +158,16 @@ export default {
         this.$refs.editedWorkspaceNameInput.focus();
       });
     },
-
     closeEditModal() {
       this.isEditModalOpen = false;
     },
-
     saveEditedWorkspaceName() {
       this.contextMenuWorkspace.name = this.editedWorkspaceName;
       this.isEditModalOpen = false;
       this.editedWorkspaceName = '';
-    },
+    }
   }
-  };
+};
 </script>
 
 <style scoped>
