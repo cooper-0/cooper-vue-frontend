@@ -1,6 +1,6 @@
 <template>
   <div>
-    <button @click="openModal" class="add-button">Work space +</button>
+    <button @click="openModal" class="add-button">Work Space+</button>
     <div class="small-menu" ref="smallMenu" :class="{ 'scrollable': workspaces.length > 4 }">
       <ul>
         <li v-for="workspace in workspaces" :key="workspace.id" 
