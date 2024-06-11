@@ -97,7 +97,7 @@ export default {
       this.stompClient = Stomp.over(socket);
 
       // 콘솔창에 웹소켓 디버그 메시지 찍히는거 비활성화함
-      this.stompClient.debug = () => {};
+      // this.stompClient.debug = () => {};
 
       // 모든 접속자들은 기본적으로 '/sub/workspace' 경로를 구독함
       this.stompClient.connect({}, () => {

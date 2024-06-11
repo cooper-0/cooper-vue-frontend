@@ -41,6 +41,7 @@
     methods: {
       setColor(userEmail) {
         let opacity = 0.2;
+
         this.subscribers.some((subscriber) => {
           if (subscriber === userEmail) {
             opacity = 1.0;
@@ -66,7 +67,7 @@
       extraUsers() {
         return this.users.slice(5).map(user => ({
           ...user,
-          color: this.setColor() || this.setColor() // 색상이 없을 경우에만 새 색상 할당
+          // color: this.setColor() || this.setColor() // 색상이 없을 경우에만 새 색상 할당
         }));
       }
     },
