@@ -51,6 +51,7 @@ export default {
           password: password.value,
         });
         localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user-email", email.value);
         axios.defaults.headers.common[
           "Authorization"
         ] = `Bearer ${response.data.token}`;
