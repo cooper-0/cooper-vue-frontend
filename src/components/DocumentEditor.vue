@@ -54,23 +54,23 @@ export default {
 
 <style scoped>
 .document-editor {
+  height: 480px;
   flex: 1;
   position: absolute;
   top: 100px;
   width: 1130px;
   box-sizing: border-box;
-  overflow-y:auto;
+  overflow-y:hidden;
   overflow-x: hidden;
 }
 
 .content {
-  min-height: 400px;
   width: calc(100% - 10px);
   margin-top: 20px;
   padding: 5px;
   background-color: #fff;
   border-radius: 4px;
-  height: 500px;
+  height: 450px;
   overflow-y: auto;
   scrollbar-width: none;
 }

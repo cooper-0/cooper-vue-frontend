@@ -2,36 +2,39 @@
   <div @click="closeAllContextMenus">
     <button @click="openWorkspaceModal" class="add-button">Work space +</button>
     <div class="workspace-container">
+
       <div class="small-menu" ref="smallMenu" :class="{ 'scrollable': workspaces.length > 4 }">
         <ul>
           <li v-for="workspace in workspaces" :key="workspace.id" 
           @click="selectWorkspace(workspace)"
               @contextmenu.prevent="openWorkspaceContextMenu($event, workspace)"
               :class="{ 'selected': workspace === selectedWorkspace }">
+
               <div class="workspace-header">
                 <span class="newWorkspaceName element"
                       @mouseover="showWorkspaceTooltip($event, workspace.name)"
                       @mouseleave="hideTooltip">{{ workspace.name }}</span>
                       <button v-if="selectedWorkspaceId === workspace.id" @click="openDocumentModal" class="add-button">+</button>
               </div>
+
               <ul v-if="workspace.id === selectedWorkspaceId" class="document-list">
-      <li v-for="(document, index) in workspace.documents" 
-          :key="document.id"
-          @click.stop="selectDocument(document.id)" 
-          @mouseenter="showDocumentHoverEffect($event, document)"
-          @mouseleave="unhoverDocument"
-          @contextmenu.prevent.stop="openDocumentContextMenu($event, document)"
-          :class="{ 'selected': document.id === selectedDocumentId, 'hovered': hoveredDocumentId === document.id }"
-          :style="{ backgroundColor: documentBackgroundColor(document) }">
-                  <span class="newDocumentName"
-                        :ref="'documentName' + index"
-                        @mouseenter="showDocumentTooltip($event, document.name)"
-                        @mouseleave="hideTooltip">{{ document.name }}</span>
-                <div class="tooltip" v-if="hoveredDocumentId === document.id">
-                  {{ document.name }}
-                </div>
-              </li>
-            </ul>
+                <li v-for="(document, index) in workspace.documents" 
+                    :key="document.id"
+                    @click.stop="selectDocument(document.id)" 
+                    @mouseenter="showDocumentHoverEffect($event, document)"
+                    @mouseleave="unhoverDocument"
+                    @contextmenu.prevent.stop="openDocumentContextMenu($event, document)"
+                    :class="{ 'selected': document.id === selectedDocumentId, 'hovered': hoveredDocumentId === document.id }"
+                    :style="{ backgroundColor: documentBackgroundColor(document) }">
+                    <span class="newDocumentName"
+                          :ref="'documentName' + index"
+                          @mouseenter="showDocumentTooltip($event, document.name)"
+                          @mouseleave="hideTooltip">{{ document.name }}</span>
+                  <div class="tooltip" v-if="hoveredDocumentId === document.id">
+                    {{ document.name }}
+                  </div>
+                </li>
+              </ul>
           </li>
         </ul>
       </div>
@@ -58,27 +61,30 @@
     <div class="tooltip" v-if="tooltipText" :style="tooltipStyle">
       {{ tooltipText }}
     </div>
-
     <div class="context-menu" v-if="workspaceContextMenuVisible" :style="workspaceContextMenuStyle">
       <ul>
         <li @click="editWorkspace(workspaceContextMenuWorkspace)" class="context-menu-item">수정</li>
         <li @click="deleteWorkspace(workspaceContextMenuWorkspace.id)" class="context-menu-item">삭제</li>
       </ul>
     </div>
-
     <div class="context-menu" v-if="documentContextMenuVisible" :style="documentContextMenuStyle">
       <ul>
         <li @click="deleteDocument(documentContextMenuDocument.id)">삭제</li>
       </ul>
+      <div class="menu-layout">
+          <MenuLayout></MenuLayout>
+        </div>
     </div>
   </div>
 </template>
 
 <script>
+import MenuLayout from '../Layout/MenuLayout.vue'
 import Modal from '@/components/Modal.vue';
 
 export default {
   components: {
+    MenuLayout,
     Modal
   },
   props: {
@@ -262,8 +268,8 @@ export default {
   overflow-x: hidden;
   max-height: 400px;
   border-radius: 8px;
-width: 100%;
-scrollbar-width: none;
+  width: 100%;
+  scrollbar-width: none;
 }
 
 .small-menu::-webkit-scrollbar {
@@ -312,18 +318,13 @@ scrollbar-width: none;
   width: 100%;
 }
 
-.workspace-header {
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
 .document-list {
+  display: grid;
   list-style-type: none;
   padding: 0;
   position: relative;
   left: 20px;
-  width: 200px;
+  width: 180px;
   z-index: 1;
   width: calc(100% - 20px);
 }
@@ -514,11 +515,6 @@ scrollbar-width: none;
   border-radius: 4px;
 }
 
-.workspace-container {
-  display: flex;
-  flex-direction: column;
-}
-
 .workspace-documents {
   margin-top: 20px;
 }
@@ -527,13 +523,6 @@ scrollbar-width: none;
   margin-bottom: 10px;
 }
 
-.workspace-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 10px;
-  width: 100%;
-}
 .newWorkspaceName {
   overflow: hidden;
   text-overflow: ellipsis;

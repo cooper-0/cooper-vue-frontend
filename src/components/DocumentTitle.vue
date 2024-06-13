@@ -40,33 +40,30 @@ export default {
         cursor: 'text',
         display: 'flex',
         alignItems: 'center',
-        whiteSpace: 'pre-wrap',
         wordBreak: 'break-word',
         padding: '3px 2px',
-        caretColor: 'rgb(55, 53, 47)'
+        caretColor: 'rgb(55, 53, 47)',
+        overflow: 'hidden'
       };
     }
   },
   methods: {
-      updateTitle(event) {
-let text = event.target.textContent;
-if (text.length > 30) {
-  event.target.textContent = text.slice(0, 30);
-  this.title = text.slice(0, 30);
-} else {
-  this.title = text;
-}
-let selection = window.getSelection();
-let range = document.createRange();
-range.selectNodeContents(event.target);
-range.collapse(false);
-selection.removeAllRanges();
-selection.addRange(range);
-this.$emit('title-updated', this.title);
-}
-
-
-
+    updateTitle(event) {
+      let text = event.target.textContent;
+      if (text.length > 30) {
+        event.target.textContent = text.slice(0, 30);
+        this.title = text.slice(0, 30);
+      } else {
+        this.title = text;
+      }
+      let selection = window.getSelection();
+      let range = document.createRange();
+      range.selectNodeContents(event.target);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      this.$emit('title-updated', this.title);
+    }
   },
   mounted() {
     this.$refs.titleField.innerText = this.initialTitle;
@@ -76,19 +73,22 @@ this.$emit('title-updated', this.title);
 
 <style scoped>
 .document-title {
-  margin-top: 50px;
-  width: 100%;
-  max-width: 1130px;
+  position: absolute;
+  top: 0px; /* 컴퓨터 해상도 */
+  width: 880px;
   background-color: #fff;
   padding: 5px 5px;
   box-sizing: border-box;
   border-bottom: 1px solid #ccc;
   z-index: 1;
+  overflow: hidden;
 }
 
 .editable-title {
+  
   max-width: 100%;
   width: 100%;
   margin: 1px;
+  white-space: nowrap;
 }
 </style>

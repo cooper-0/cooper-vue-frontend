@@ -1,5 +1,5 @@
 <template>
-  <div id="main">
+  <div id="main" class="container">
     <div class="left-layout" :class="{ 'left-layout-open': !isDrawerOpen }">
       <div class="site-layout">
         <div class="site-title">
@@ -26,21 +26,22 @@
     <div class="voice-chat">
       <VoiceChat v-if="isChatVisible && isDrawerOpen" />
     </div>
+    <div class="serve-layout">
+          <ServeLayout></ServeLayout>
+        </div>
   </div>
 </template>
 
 <script>
+import ServeLayout from '../Layout/ServeLayout.vue'
 import WorkspaceMenuList from '@/components/WorkspaceMenuList.vue';
 import VoiceChat from './VoiceChat.vue';
 
-
-
 export default {
   components: {
+    ServeLayout,
     WorkspaceMenuList,
     VoiceChat,
-
-
   },
   props: {
     workspaces: Array,
@@ -90,8 +91,8 @@ export default {
 
 <style scoped>
 #main {
-  display: flex;
-  height: 97.6vh;
+  display: grid;
+  height: 679px; /* 컴퓨터 해상도 */
   overflow: hidden;
 }
 
@@ -114,7 +115,6 @@ export default {
   overflow: hidden;
 }
 .site-layout {
-
   overflow: hidden; 
 }
 
