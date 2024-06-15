@@ -43,7 +43,7 @@
 <script>
 import Modal from '@/components/Modal.vue';
 import axios from "axios";
-
+//import newWorkspaceName from "core-js/internals/string-trim";
 
 export default {
   components: {
@@ -89,6 +89,7 @@ export default {
             });
       }
     },
+
     //워크스페이스 삭제 시 동일한 이름의 컬렉션 삭제
     deleteWorkspace(workspaceId) {
       // 해당 ID의 워크스페이스를 찾습니다.
@@ -97,7 +98,7 @@ export default {
       // 사용자에게 삭제할지 확인 메시지를 표시
       if (workspace && confirm(`'${workspace.name}' 워크스페이스를 삭제하시겠습니까?`)) {
         // 사용자가 확인을 눌렀을 때만 삭제 작업을 수행
-        axios.delete('http://localhost:8080/cooper-chat/deleteRoom', { params: { roomId: workspace.name } })
+        axios.delete('http://localhost:8080/cooper-chat/deleteRoom', {params: {roomId: workspace.name}})
             .then(response => {
               console.log(response.data);
               // 삭제된 워크스페이스 ID를 부모 컴포넌트에 전달
@@ -161,10 +162,27 @@ export default {
     closeEditModal() {
       this.isEditModalOpen = false;
     },
+
+    // 워크스페이스 이름 수정 시 몽고DB 컬렉션 이름도 같이 수정
     saveEditedWorkspaceName() {
-      this.contextMenuWorkspace.name = this.editedWorkspaceName;
-      this.isEditModalOpen = false;
-      this.editedWorkspaceName = '';
+      if (this.editedWorkspaceName.trim() !== '') {
+        axios.put('http://localhost:8080/cooper-chat/updateRoomName', null, {
+          params: {
+            //
+            oldRoomId: this.contextMenuWorkspace.name,
+            newRoomId: this.editedWorkspaceName
+          }
+        })
+            .then(response => {
+              console.log(response.data);
+              this.contextMenuWorkspace.name = this.editedWorkspaceName;
+              this.isEditModalOpen = false;
+              this.editedWorkspaceName = '';
+            })
+            .catch(error => {
+              console.error('이름 수정 실패:', error);
+            });
+      }
     }
   }
 };
