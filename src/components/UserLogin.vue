@@ -51,10 +51,10 @@ export default {
           password: password.value,
         });
         
-        localStorage.setItem("user-email", email.value);
         const data = response.data;
         localStorage.setItem("token", data.token);
         localStorage.setItem("user-id", data.id);
+        localStorage.setItem("user-email", email.value);
         localStorage.setItem("user-name", data.name);
         localStorage.setItem("user-role", data.role);
 

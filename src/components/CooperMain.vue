@@ -30,7 +30,10 @@
         @title-updated="handleTitleUpdated"
       />
 
-      <UserList v-if="selectedWorkspace" />
+      <UserList v-if="selectedWorkspace"
+        :users="users"
+        :subscribers="subscribers"
+      />
 
       <button v-if="selectedWorkspace" @click="toggleDrawer" class="drawer-toggle" :class="{ 'opened': isDrawerOpen }">
         <span v-if="isDrawerOpen" class="arrow-icon">💬</span>
@@ -53,7 +56,7 @@
 import SiteLayout from './SiteLayout.vue';
 import DocumentEditor from './DocumentEditor.vue';
 import ChatComponent from './ChatComponent.vue';
-import { v4 as uuidv4 } from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import DocumentTitle from './DocumentTitle.vue';
 import Stomp from 'webstomp-client'
 import SockJS from 'sockjs-client'
@@ -73,8 +76,11 @@ export default {
       workspaces: [],
       documents: [],
       lines: [],
+      users: [],
       connectionStateWs: null,
+      subscriptionStateWs: null,
       connectionStateDoc: null,
+      subscribers: [],
       selectedWorkspace: null,
       selectedDocument: null,
       isDrawerOpen: false,
@@ -91,7 +97,7 @@ export default {
       this.stompClient = Stomp.over(socket);
 
       // 콘솔창에 웹소켓 디버그 메시지 찍히는거 비활성화함
-      this.stompClient.debug = () => {};
+      // this.stompClient.debug = () => {};
 
       // 모든 접속자들은 기본적으로 '/sub/workspace' 경로를 구독함
       this.stompClient.connect({}, () => {
@@ -152,6 +158,18 @@ export default {
       });
     },
 
+    // 연결된 워크스페이스 구독 해제
+    disconnectWs() {
+      if (this.selectedWorkspace != null) {
+        this.subscriptionStateWs.unsubscribe({
+          userEmail: localStorage.getItem("user-email"),
+          destination: `/sub/workspace/${this.selectedWorkspace.id}/subscribers`
+        });
+        // 구독 해제한 뒤에 아직 남아있는 접속자들에게 변경 정보를 알려주기 위한 웹소켓 메시지 전송
+        this.stompClient.send(`/pub/workspace/${this.selectedWorkspace.id}/subscribers`);
+      }
+    },
+
     // 연결된 기존 문서 웹소켓 구독 해제
     disconnectDoc() {
       if (this.connectionStateDoc) {
@@ -166,7 +184,19 @@ export default {
     // 워크스페이스 선택
     selectWorkspace(ws) {
       // 워크스페이스가 변경되면 문서에 대한 웹소켓 구독 해제
-      this.disconnectDoc();
+      if (this.selectedDocument != null) {
+        this.disconnectDoc();
+      }
+
+      this.disconnectWs(); // 기존에 선택한 워크스페이스가 있다면 구독 해제
+      this.subscriptionStateWs = this.stompClient.subscribe(`/sub/workspace/${ws.id}/subscribers`, (res) => {
+        this.subscribers = JSON.parse(res.body);
+      }, {
+        userEmail: localStorage.getItem("user-email")
+      });
+
+      // 변경사항 갱신을 위해 웹소켓 메시지 전송
+      this.stompClient.send(`/pub/workspace/${ws.id}/subscribers`);
 
       this.selectedWorkspace = ws;
       this.selectedDocument = null;
@@ -198,6 +228,7 @@ export default {
     deleteWorkspace(id) {
       // 삭제하려는 워크스페이스가 현재 선택되어있는 워크스페이스라면 이 부분이 실행
       if (this.selectedWorkspace && this.selectedWorkspace.id === id) {
+        this.disconnectWs(); // 삭제하기 전, 워크스페이스에 대한 구독 해제
         this.selectedWorkspace = null;
         this.selectedDocument = null;
         this.selectedDocumentTitle = '';
@@ -235,13 +266,13 @@ export default {
       if (this.selectedDocument != null && this.selectedDocument.id === document.id) {
         this.selectedDocument = null;
       } else {
-        // 아니면 문서 열기
+        // 아니라면 문서 열고 기존 연결 해제
+        if (this.selectedDocument != null) {
+          this.disconnectDoc();
+        }
         this.selectedDocument = document;
 
         this.selectedDocumentTitle = document.name;
-
-        // 기존 연결 해제
-        this.disconnectDoc();
 
         // 각 문서에 대한 웹소켓 연결
         this.doc_connect(this.selectedWorkspace.id, document.id);
@@ -254,7 +285,7 @@ export default {
           } else {
             this.lines = result.data;
           }
-        })
+        });
       }
     },
 
@@ -456,6 +487,16 @@ export default {
   mounted() {
     this.connect();
     this.loadWorkspaces();
+
+    // 새로고침, 탭 닫기 등을 하게 되면 웹소켓 구독을 모두 해제
+    window.addEventListener('beforeunload', () => {
+      this.disconnectWs();
+    });
+
+    // 최초 화면이 로드될 때 전체 유저 목록을 cooper-user 서버에 요청해서 저장함
+    axios.get(`/cooper-user/user`).then((res) => {
+      this.users = res.data;
+    });
   },
 
   beforeUnmount() {
