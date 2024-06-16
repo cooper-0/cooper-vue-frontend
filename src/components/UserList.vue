@@ -1,10 +1,10 @@
 <template>
     <div class="user-icons">
         <ul>
-          <li v-for="user in users.slice(0, 5)" :key="user.email" class="user-icon" :style="{ backgroundColor: user.color }">
+          <li v-for="user in UserList.slice(0, 5)" :key="user.email" class="user-icon" :style="{ backgroundColor: user.color }">
             {{ user.name.slice(-2) }}
           </li>
-          <li v-if="users.length > 5" 
+          <li v-if="UserList.length > 5" 
             class="extra-users"
             @mouseover="showTooltip=true" @mouseleave="showTooltip=false"
             :style="{ backgroundColor: '#6A5ACD'}">
@@ -34,11 +34,24 @@
     },
     data() {
       return {
+        UserList: [],
         showTooltip: false,
         stompClient: null,
       };
     },
     methods: {
+      // 이메일을 기반으로 색상을 생성하는 함수
+      getColorFromEmail(userEmail, opacity) {
+        let hash = 0;
+        for (let i = 0; i < userEmail.length; i++) {
+          hash = userEmail.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const r = (hash >> 24) & 0xFF;
+        const g = (hash >> 16) & 0xFF;
+        const b = (hash >> 8) & 0xFF;
+
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+      },
       setColor(userEmail) {
         let opacity = 0.2;
 
@@ -52,12 +65,23 @@
         });
 
         // RGBA 색상 코드 생성(접속 여부에 따라 투명도 조절)
-        return `rgba(0, 0, 0, ${opacity}`;
+        return this.getColorFromEmail(userEmail, opacity);
       },
       updateUserColors() {
+        // 색상을 변경
         this.users.forEach(user => {
           user.color = this.setColor(user.email);
         });
+
+        this.UserList = this.users;
+
+        // 사용자 배열 정렬, 투명도가 1인 사용자를 우선
+        this.UserList.sort((a, b) => {
+          const opacityA = this.subscribers.includes(a.email) ? 1.0 : 0.2;
+          const opacityB = this.subscribers.includes(b.email) ? 1.0 : 0.2;
+          return opacityB - opacityA;
+        });
+
       },
     },
     mounted() {
@@ -65,7 +89,7 @@
     },
     computed: {
       extraUsers() {
-        return this.users.slice(5).map(user => ({
+        return this.UserList.slice(5).map(user => ({
           ...user,
           // color: this.setColor() || this.setColor() // 색상이 없을 경우에만 새 색상 할당
         }));
