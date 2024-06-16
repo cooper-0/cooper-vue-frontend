@@ -31,11 +31,11 @@
       </div>
 
       <div class="document-editor" v-if="selectedDocumentId">
-//        <DocumentEditor
-//          :content="selectedDocumentContent"
-//          @update-content="updateDocumentContent"
-//          @save-content="saveDocumentContent"
-//        />
+        <!-- <DocumentEditor 
+          :content="selectedDocumentContent"
+          @update-content="updateDocumentContent"
+          @save-content="saveDocumentContent"
+        /> -->
         <DocumentEditor
           ref="documentEditor"
           :lines="lines"
@@ -44,10 +44,10 @@
         />
       </div>
       
-      <UserList v-if="selectedWorkspace"
+      <!-- <UserList v-if="selectedWorkspace"
         :users="users"
         :subscribers="subscribers"
-      />
+      /> -->
 
       <div class="drawer-toggle-area" v-if="selectedWorkspace">
         <button @click="toggleDrawer" class="drawer-toggle" :class="{ 'opened': isDrawerOpen }">
@@ -81,6 +81,9 @@ import {v4 as uuidv4} from 'uuid';
 import DocumentTitle from './DocumentTitle.vue';
 import UserList from './UserList.vue';
 import MainLayout from '../Layout/MainLayout.vue';
+import Stomp from 'webstomp-client'
+import SockJS from 'sockjs-client'
+import axios from '../axios.js';
 
 export default {
   components: {
