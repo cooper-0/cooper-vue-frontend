@@ -14,6 +14,12 @@ module.exports = {
         changeOrigin: true,
         pathRewrite: { '^/cooper-user': '/cooper-user' },
       },
+
+
+      '/cooper-chat': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
     },
   },
   configureWebpack: {

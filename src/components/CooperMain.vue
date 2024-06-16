@@ -1,33 +1,33 @@
 <template>
   <div id="main">
     <SiteLayout
-      :workspaces="workspaces"
-      :documents="documents"
-      :selectedWorkspace="selectedWorkspace"
-      :selectedDocument="selectedDocument"
-      :connectionStateWs="connectionStateWs"
-      :connectionStateDoc="connectionStateDoc"
-      @select-workspace="selectWorkspace"
-      @add-workspace="addNewWorkspace"
-      @delete-workspace="deleteWorkspace"
-      @select-document="openDocument"
-      @add-document="addNewDocument"
-      @delete-document="deleteDocument"
+        :workspaces="workspaces"
+        :documents="documents"
+        :selectedWorkspace="selectedWorkspace"
+        :selectedDocument="selectedDocument"
+        :connectionStateWs="connectionStateWs"
+        :connectionStateDoc="connectionStateDoc"
+        @select-workspace="selectWorkspace"
+        @add-workspace="addNewWorkspace"
+        @delete-workspace="deleteWorkspace"
+        @select-document="openDocument"
+        @add-document="addNewDocument"
+        @delete-document="deleteDocument"
     />
 
     <div class="content-area">
       <DocumentEditor
-        v-if="selectedDocument"
-        ref="documentEditor"
-        :lines="lines"
-        @handle-input="handleInput"
-        @handle-keydown="handleKeyDown"
+          v-if="selectedDocument"
+          ref="documentEditor"
+          :lines="lines"
+          @handle-input="handleInput"
+          @handle-keydown="handleKeyDown"
       />
 
       <DocumentTitle
-        v-if="selectedDocument"
-        :initialTitle="selectedDocumentTitle"
-        @title-updated="handleTitleUpdated"
+          v-if="selectedDocument"
+          :initialTitle="selectedDocumentTitle"
+          @title-updated="handleTitleUpdated"
       />
 
       <UserList v-if="selectedWorkspace"
@@ -43,8 +43,9 @@
       <div :class="['drawer', { 'show': isDrawerOpen }]" v-if="selectedWorkspace">
         <div class="drawer-content">
           <ChatComponent
-            :messages="selectedWorkspace.chatMessages"
-            @new-message="addMessage"
+              :workspaceId="selectedWorkspace.id"
+              :messages="selectedWorkspace.chatMessages"
+              @new-message="addMessage"
           />
         </div>
       </div>
@@ -211,6 +212,18 @@ export default {
           id: uuidv4(), // v4: 랜덤 값에 기반하여 id(32개의 16진수, 36개의 문자[8개-4개-4개-12개]) 생성
           name: newWorkspaceName.trim(), // 문자열 양쪽 끝의 공백 제거: ex) '  workspace 1  ' => 'workspace 1'
         };
+        // MongoDB에 워크스페이스 채팅 컬렉션 생성
+        axios.post(`/cooper-chat/create`, null, { params: { roomId: newWorkspace.id } })
+            .then(response => {
+              const chatResult = response.data;
+              console.log('채팅 컬렉션이 생성되었습니다:', chatResult);
+              this.workspaces.push({ id: newWorkspace.id, name: newWorkspace.name });
+              this.$emit('add-workspace', { id: newWorkspace.id, name: newWorkspace.name });
+              this.newWorkspaceName = '';
+            })
+            .catch(error => {
+              console.error('채팅 컬렉션 생성 실패:', error);
+            });
 
         // MySQL 연동
         const fd = new FormData();
@@ -237,7 +250,17 @@ export default {
         this.selectedDocument = null;
         this.selectedDocumentTitle = '';
       }
-
+      // 채팅 서버 몽고DB 컬렉션 삭제
+      axios.delete('/cooper-chat/deleteRoom', { params: { roomId: id } })
+          .then(response => {
+            console.log('채팅 컬렉션이 삭제되었습니다:', response.data);
+            // 삭제된 워크스페이스 ID를 부모 컴포넌트에 전달
+            this.$emit('delete-workspace', id);
+            this.contextMenuVisible = false;
+          })
+          .catch(error => {
+            console.error('채팅 컬렉션 삭제 실패:', error);
+          });
       // MySQL 연동
       axios.delete(`/cooper-docs/workspace/${id}`).then(result => {
         this.workspaces = result.data;

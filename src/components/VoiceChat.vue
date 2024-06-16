@@ -348,7 +348,7 @@
       },
     },
     mounted() {
-      this.connectToSignalingServer();
+      // this.connectToSignalingServer();
     },
   }
   </script>
