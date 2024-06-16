@@ -16,29 +16,45 @@
     />
 
     <div class="content-area">
-      <DocumentEditor
-        v-if="selectedDocument"
-        ref="documentEditor"
-        :lines="lines"
-        @handle-input="handleInput"
-        @handle-keydown="handleKeyDown"
-      />
+      <div class="user-list" v-if="selectedWorkspace">
+        <UserList
+          :users="users"
+          :subscribers="subscribers"
+        />
+      </div>
 
-      <DocumentTitle
-        v-if="selectedDocument"
-        :initialTitle="selectedDocumentTitle"
-        @title-updated="handleTitleUpdated"
-      />
+      <div class="document-title" v-if="selectedDocumentId">
+        <DocumentTitle
+          :initialTitle="selectedDocumentTitle"
+          @title-updated="handleTitleUpdated"
+        />
+      </div>
 
+      <div class="document-editor" v-if="selectedDocumentId">
+//        <DocumentEditor
+//          :content="selectedDocumentContent"
+//          @update-content="updateDocumentContent"
+//          @save-content="saveDocumentContent"
+//        />
+        <DocumentEditor
+          ref="documentEditor"
+          :lines="lines"
+          @handle-input="handleInput"
+          @handle-keydown="handleKeyDown"
+        />
+      </div>
+      
       <UserList v-if="selectedWorkspace"
         :users="users"
         :subscribers="subscribers"
       />
 
-      <button v-if="selectedWorkspace" @click="toggleDrawer" class="drawer-toggle" :class="{ 'opened': isDrawerOpen }">
-        <span v-if="isDrawerOpen" class="arrow-icon">💬</span>
-        <span v-else class="arrow-icon">🗨️</span>
-      </button>
+      <div class="drawer-toggle-area" v-if="selectedWorkspace">
+        <button @click="toggleDrawer" class="drawer-toggle" :class="{ 'opened': isDrawerOpen }">
+          <span v-if="isDrawerOpen" class="arrow-icon">💬</span>
+          <span v-else class="arrow-icon">🗨️</span>
+        </button>
+      </div>
 
       <div :class="['drawer', { 'show': isDrawerOpen }]" v-if="selectedWorkspace">
         <div class="drawer-content">
@@ -48,8 +64,13 @@
           />
         </div>
       </div>
+      
+    <div class="main-layout">
+      <MainLayout></MainLayout>
     </div>
   </div>
+</div>
+
 </template>
 
 <script>
@@ -58,19 +79,28 @@ import DocumentEditor from './DocumentEditor.vue';
 import ChatComponent from './ChatComponent.vue';
 import {v4 as uuidv4} from 'uuid';
 import DocumentTitle from './DocumentTitle.vue';
-import Stomp from 'webstomp-client'
-import SockJS from 'sockjs-client'
 import UserList from './UserList.vue';
-import axios from '../axios';
+import MainLayout from '../Layout/MainLayout.vue';
 
 export default {
   components: {
+    MainLayout,
     SiteLayout,
     DocumentEditor,
     ChatComponent,
     DocumentTitle,
     UserList,
   },
+//data() {
+//  return {
+//    workspaces: [],
+//    selectedWorkspace: null,
+//    selectedDocumentId: null,
+//    selectedDocumentContent: '',
+//    isDrawerOpen: false,
+//    selectedDocumentTitle: ''
+//  };
+//},
   data() {
     return {
       workspaces: [],
@@ -87,6 +117,43 @@ export default {
       selectedDocumentTitle: ''
     };
   },
+// methods: {
+//   toggleDrawer() {
+//     this.isDrawerOpen = !this.isDrawerOpen;
+//   },
+//  selectWorkspace(ws) {
+//    this.selectedWorkspace = ws;
+//    this.selectedDocumentId = null;
+//    this.selectedDocumentContent = '';
+//    this.selectedDocumentTitle = '';
+//    this.loadDocumentsFromLocalStorage(ws.id);
+//  },
+//  addNewWorkspace(newWorkspaceName) {
+//    if (newWorkspaceName.trim() !== '') {
+//      const newWorkspace = {
+//        id: uuidv4(),
+//        name: newWorkspaceName.trim(),
+//       documents: [],
+//        chatMessages: [],
+//      };
+//      this.workspaces.push(newWorkspace);
+//      this.saveWorkspacesToLocalStorage();
+//    }
+//  },
+//  deleteWorkspace(id) {
+//    this.workspaces = this.workspaces.filter(ws => ws.id !== id);
+//    if (this.selectedWorkspace && this.selectedWorkspace.id === id) {
+//      this.selectedWorkspace = null;
+//      this.selectedDocumentId = null;
+//      this.selectedDocumentContent = '';
+//      this.selectedDocumentTitle = '';
+//    }
+//    this.saveWorkspacesToLocalStorage();
+//  },
+//  addNewDocument(newDocumentName) {
+//    if (this.selectedWorkspace && newDocumentName.trim() !== '') {
+//      const newDocument = {  
+
   methods: {
     connect() {
       // 임시 userId 설정
@@ -483,6 +550,17 @@ export default {
       return caretOffset;
     },
 
+//    loadDocumentsFromLocalStorage(workspaceId) {
+//      const data = localStorage.getItem(`workspace-${workspaceId}`);
+//      if (data) {
+//        const workspace = this.workspaces.find(ws => ws.id === workspaceId);
+//        if (workspace) {
+//          const storedData = JSON.parse(data);
+//          workspace.documents = storedData.documents || [];
+//          workspace.chatMessages = storedData.chatMessages || [];
+//        }
+//      }
+//    },
   },
   mounted() {
     this.connect();
@@ -500,20 +578,20 @@ export default {
   },
 
   beforeUnmount() {
-  },
+//    window.removeEventListener('beforeunload', this.saveWorkspacesToLocalStorage);
+  }
 };
 </script>
 
 <style scoped>
 #main {
   display: flex;
-  flex-direction: row;
 }
 
 .content-area {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 97.7vh;
   flex-grow: 1;
 }
 
@@ -529,6 +607,10 @@ export default {
   cursor: pointer;
 }
 
+.drawer-toggle .arrow-icon {
+  font-size: 18px;
+}
+
 .drawer-toggle .arrow-icon.reversed {
   transform: scaleX(-1);
 }
@@ -536,10 +618,7 @@ export default {
 .drawer {
   background-color: #333;
   position: fixed;
-  top: 0;
-  right: 0;
   height: 100vh;
-  width: 400px;
   background-color: #f8f9fa;
   border-left: 1px solid #ccc;
   z-index: 100;
@@ -557,7 +636,6 @@ export default {
 }
 .arrow-icon {
   font-size: 18px;
-  transform: scaleX(-1); /* 좌우 반전 */
 }
 
 </style>

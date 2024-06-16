@@ -1,71 +1,56 @@
 <template>
-  <div id="main">
+  <div id="main" class="container">
     <div class="left-layout" :class="{ 'left-layout-open': !isDrawerOpen }">
       <div class="site-layout">
         <div class="site-title">
           COOPER
         </div>
-        
-        <WorkspaceList
+        <WorkspaceMenuList
           :workspaces="workspaces"
+          :selectedWorkspace="selectedWorkspace"
+          :documents="selectedWorkspace ? selectedWorkspace.documents : []"
+          :selectedDocumentId="selectedDocumentId"
           @select-workspace="toggleDocumentList"
           @add-workspace="addNewWorkspace"
           @delete-workspace="deleteWorkspace"
-        />
-        
-        <DocumentList
-          v-if="isDocumentListVisible && selectedWorkspace"
-          :documents="documents"
-          :selectedDocument="selectedDocument"
           @select-document="openDocument"
           @add-document="addNewDocument"
           @delete-document="deleteDocument"
         />
       </div>
-      
       <div class="drawer-toggle" @click="toggleDrawer">
         <span v-if="isDrawerOpen">❮</span>
         <span v-else>❯</span>
       </div>
     </div>     
-
-    <div class="right-layout" :class="{ 'right-layout-open': isDrawerOpen }">
-      <DocumentTitle v-if="isDrawerOpen && selectedDocument" />
-      <DocumentEditor v-if="isDrawerOpen && selectedDocument" />
-    </div>
     <div class="voice-chat">
-    <VoiceChat v-if="isChatVisible && selectedWorkspace" />
+      <VoiceChat v-if="isChatVisible && isDrawerOpen" />
     </div>
+    <div class="serve-layout">
+          <ServeLayout></ServeLayout>
+        </div>
   </div>
 </template>
 
 <script>
-import WorkspaceList from './WorkspaceList.vue';
-import DocumentList from './DocumentList.vue';
+import ServeLayout from '../Layout/ServeLayout.vue'
+import WorkspaceMenuList from '@/components/WorkspaceMenuList.vue';
 import VoiceChat from './VoiceChat.vue';
-import DocumentTitle from './DocumentTitle.vue';
-import DocumentEditor from './DocumentEditor.vue';
 
 export default {
   components: {
-    WorkspaceList,
-    DocumentList,
+    ServeLayout,
+    WorkspaceMenuList,
     VoiceChat,
-    DocumentTitle,
-    DocumentEditor
   },
   props: {
     workspaces: Array,
-    documents: Array,
     selectedWorkspace: Object,
-    selectedDocument: Object,
-    connectionStateWs: Object,
-    connectionStateDoc: Object,
+    selectedDocumentId: String
   },
   data() {
     return {
       isDrawerOpen: true,
-      isDocumentListVisible: false,
       isChatVisible: false
     };
   },
@@ -73,13 +58,12 @@ export default {
     toggleDrawer() {
       this.isDrawerOpen = !this.isDrawerOpen;
       if (!this.isDrawerOpen) {
-        this.isChatVisible = false; // 드로어가 닫힐 때 채팅을 숨김
+        return;
       }
     },
     toggleDocumentList(ws) {
-      // 동일한 워크스페이스를 한 번 더 클릭하는 경우 이 부분이 실행됨
       if (this.selectedWorkspace && this.selectedWorkspace.id === ws.id) {
-        this.isDocumentListVisible = !this.isDocumentListVisible;
+        this.isDocumentListVisible = true;
       } else {
         this.isDocumentListVisible = true;
         this.$emit('select-workspace', ws);
@@ -92,8 +76,8 @@ export default {
     deleteWorkspace(id) {
       this.$emit('delete-workspace', id);
     },
-    openDocument(document) {
-      this.$emit('select-document', document);
+    openDocument(documentId) {
+      this.$emit('select-document', documentId);
     },
     addNewDocument(newDocumentName) {
       this.$emit('add-document', newDocumentName);
@@ -107,8 +91,9 @@ export default {
 
 <style scoped>
 #main {
-  display: flex;
-  height: 100vh; /* height를 100vh로 설정하여 화면에 맞춤 */
+  display: grid;
+  height: 679px; /* 컴퓨터 해상도 */
+  overflow: hidden;
 }
 
 .left-layout {
@@ -118,17 +103,19 @@ export default {
   background-color: #f0f0f0;
   transition: width 0.3s ease;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  overflow: hidden; /* 요소가 사라질 때 내용도 함께 사라지도록 설정 */
+  height: 100%; 
 }
 
 .left-layout-open {
-  width: 0 !important; /* !important를 사용하여 스타일 우선순위 높임 */
-
+  width: 0 !important;
 }
 
+.left-layout-closed {
+  width: 0;
+  overflow: hidden;
+}
 .site-layout {
-  flex: 1;
-  overflow-y: auto;
+  overflow: hidden; 
 }
 
 .site-title {
@@ -138,10 +125,13 @@ export default {
   font-weight: bold;
   margin: 20px 0;
   color: #333;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .drawer-toggle {
-  position: absolute; /* position을 fixed에서 absolute로 변경하여 부모 요소에 상대적으로 위치 조정 */
+  position: absolute;
   top: 10px;
   left: 10px;
   background-color: #ddd;
@@ -156,19 +146,14 @@ export default {
   font-size: 24px;
 }
 
-.right-layout {
-  flex: 1;
-  background-color: #fff;
-  transition: margin-left 0.3s ease;
-  margin-left: -240px; /* 기본 마진을 240px로 설정하여 왼쪽 레이아웃의 너비와 맞춤 */
-  margin-top: 300px; /* 웹캠 컨테이너 높이에 맞춰 상단 마진 조정 */
-}
-
-.right-layout-open {
-  margin-left: 0; /* 드로어가 열렸을 때 마진을 0으로 설정하여 드로어가 보이도록 함 */
-}
-
 .voice-chat {
-  z-index: 500;
+  z-index: 5;
 }
+
+.right-content {
+  flex: 1;
+  overflow: auto;
+  transition: margin-left 0.3s ease;
+}
+
 </style>
