@@ -50,15 +50,10 @@ export default {
           email: email.value,
           password: password.value,
         });
-        
-        const data = response.data;
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user-id", data.id);
-        localStorage.setItem("user-email", email.value);
-        localStorage.setItem("user-name", data.name);
-        localStorage.setItem("user-role", data.role);
-
-        axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+        localStorage.setItem("token", response.data.token);
+        axios.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${response.data.token}`;
         router.push("/cooper");
       } catch (error) {
         errorMessage.value =
