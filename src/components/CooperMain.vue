@@ -251,7 +251,7 @@ export default {
         this.selectedDocumentTitle = '';
       }
       // 채팅 서버 몽고DB 컬렉션 삭제
-      axios.delete('http://localhost:8080/cooper-chat/deleteRoom', { params: { roomId: id } })
+      axios.delete('/cooper-chat/deleteRoom', { params: { roomId: id } })
           .then(response => {
             console.log('채팅 컬렉션이 삭제되었습니다:', response.data);
             // 삭제된 워크스페이스 ID를 부모 컴포넌트에 전달

@@ -46,9 +46,9 @@
 </template>
 
 <script>
-import axios from "axios";
+import axios from "../axios";
 import SockJS from "sockjs-client";
-import {Stomp} from "@stomp/stompjs";
+import Stomp from "webstomp-client";
 
 
 export default {
@@ -67,13 +67,13 @@ export default {
   methods: {
 
     connect(workspaceId) {
-      const socket = new SockJS("http://localhost:8080/cooper-chat");
+      const socket = new SockJS("http://221.144.190.76:8000/chat");
       this.stompClient = Stomp.over(socket);
 
       this.stompClient.connect(
           {},
           frame => {
-            console.log("Connected: " + frame);
+            console.log("Chat Connected: " + frame);
 
             this.subscriptionStateWs = this.stompClient.subscribe(`/topic/${workspaceId}`, message => {
               if (message.body) {
@@ -93,7 +93,7 @@ export default {
 
     loadMessage(workspaceId) {
       axios
-          .get(`http://localhost:8080/cooper-chat/previous/${workspaceId}`)
+          .get(`/cooper-chat/previous/${workspaceId}`)
           .then(response => {
             console.log("Received messages:", response.data);
             this.messages = response.data.map(message => {
@@ -137,7 +137,7 @@ export default {
         console.log("Sending message data:", messageData);
         console.log(this.workspaceId)
         axios
-            .post(`http://localhost:8080/cooper-chat/message?collectionName=${this.workspaceId}`, messageData)
+            .post(`/cooper-chat/message?collectionName=${this.workspaceId}`, messageData)
             .then(response => {
               console.log("Message sent successfully:", response.data);
               console.log(messageData.senderID, ": ", messageData.message);
@@ -173,7 +173,7 @@ export default {
       if (message && message.senderID === this.email) {
         const messageId = message._id;
         axios
-            .delete(`http://localhost:8080/cooper-chat/deleteChat`, {
+            .delete(`/cooper-chat/deleteChat`, {
               params: {
                 messageId: messageId,
                 collectionName: this.workspaceId
