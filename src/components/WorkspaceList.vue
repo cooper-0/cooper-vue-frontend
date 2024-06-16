@@ -3,7 +3,7 @@
     <button @click="openModal" class="add-button">Work space +</button>
     <div class="small-menu" ref="smallMenu" :class="{ 'scrollable': workspaces.length > 4 }">
       <ul>
-        <li v-for="workspace in workspaces" :key="workspace.id" 
+        <li v-for="workspace in workspaces" :key="workspace.id"
             @click="selectWorkspace(workspace)"
             @contextmenu.prevent="openContextMenu($event, workspace)">
           <span class="newWorkspaceName"
@@ -147,7 +147,7 @@ export default {
       this.editedWorkspaceName = '';
     },
   }
-  };
+};
 </script>
 
 <style scoped>
