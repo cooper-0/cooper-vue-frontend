@@ -2,27 +2,26 @@
   <div class="chat-component">
     <div class="header-container">
       <div class="workspace-content">
-        #{{ workspaceName }}
       </div>
     </div>
     <div class="body-container">
       <div class="body-top"></div>
       <div class="body-middle">
-        <div class="messages"> // User 부분 senderID로 변경해야 함
+        <div class="messages">
           <div
               v-for="(message, index) in messages"
               :key="index"
-              :class="['message', message.senderID === 'User' ? 'my-message' : 'other-message']"
+              :class="['message', message.senderID === email ? 'my-message' : 'other-message']"
+              @contextmenu.prevent="message.senderID === email ? openContextMenu($event, message) : null"
           >
-            <div v-if="message.senderID !== 'User'" class="sender">{{ message.senderID }}</div>
+            <div v-if="message.senderID !== email" class="sender">{{ message.senderID }}</div>
             <div class="message-container" id="chatting">
-              <div
-                  :class="['timestamp', message.senderID === 'User' ? 'my-timestamp' : 'other-timestamp']"
-              >
-              </div>
-              <div v-if="message.senderID === 'User'" class="my-message">
+              <div :class="['timestamp', message.senderID === email ? 'my-timestamp' : 'other-timestamp']"></div>
+              <div v-if="message.senderID === email" class="my-message">
                 <div class="my-stamp">{{ message.timestamp }}</div>
-                <div class="my-messageText">{{ message.message }}</div>
+                <div class="my-messageText">
+                  {{ message.message }}
+                </div>
               </div>
               <div v-else class="other-message">
                 <div class="sender"></div>
@@ -49,27 +48,34 @@
 <script>
 import axios from "axios";
 import SockJS from "sockjs-client";
-import { Stomp } from "@stomp/stompjs";
+import {Stomp} from "@stomp/stompjs";
+
 
 export default {
-  props: ["workspaceName", "email"],
+  props: ["workspaceId"],
   data() {
     return {
       newMessage: "",
       messages: [],
-      stompClient: null
+      stompClient: null,
+      email: localStorage.getItem("user-email"),
+      contextMenuVisible: false,
+      contextMenuStyle: {},
+      contextMenuMessage: null
     };
   },
   methods: {
-    connect(workspaceName) {
-      const socket = new SockJS("http://192.168.0.17:8080/cooper-chat");
+
+    connect(workspaceId) {
+      const socket = new SockJS("http://localhost:8080/cooper-chat");
       this.stompClient = Stomp.over(socket);
 
       this.stompClient.connect(
           {},
           frame => {
             console.log("Connected: " + frame);
-            this.stompClient.subscribe(`/topic/${workspaceName}`, message => {
+
+            this.subscriptionStateWs = this.stompClient.subscribe(`/topic/${workspaceId}`, message => {
               if (message.body) {
                 const receivedMessage = JSON.parse(message.body);
                 receivedMessage.timestamp = this.formatTimestamp(receivedMessage.timestamp);
@@ -83,9 +89,11 @@ export default {
           }
       );
     },
-    loadMessage(workspaceName) {
+
+
+    loadMessage(workspaceId) {
       axios
-          .get(`http://192.168.0.17:8080/cooper-chat/previous/${workspaceName}`)
+          .get(`http://localhost:8080/cooper-chat/previous/${workspaceId}`)
           .then(response => {
             console.log("Received messages:", response.data);
             this.messages = response.data.map(message => {
@@ -102,6 +110,7 @@ export default {
           });
     },
     formatTimestamp(dateString) {
+
       const date = new Date(dateString);
       const kstOffset = 9 * 60 * 60 * 1000;
       const kstDate = new Date(date.getTime() + kstOffset);
@@ -119,18 +128,19 @@ export default {
 
         const messageData = {
           messageType: "TALK",
-          roomId: this.workspaceName,
-          senderID: "User", // 회원가입 한 이름
+          roomId: this.workspaceId, // WorkspaceId를 사용
+          senderID: this.email, // 회원가입 한 이름
           senderEmail: "user@example.com", // 회원가입 한 이메일
           message: this.newMessage,
           timestamp: currentTime
         };
-
+        console.log("Sending message data:", messageData);
+        console.log(this.workspaceId)
         axios
-            .post(`http://192.168.0.17:8080/cooper-chat/message?collectionName=${this.workspaceName}`, messageData)
-            .then(() => {
+            .post(`http://localhost:8080/cooper-chat/message?collectionName=${this.workspaceId}`, messageData)
+            .then(response => {
+              console.log("Message sent successfully:", response.data);
               console.log(messageData.senderID, ": ", messageData.message);
-              // 메시지를 전송한 후에 스크롤을 조정합니다.
               this.scrollToBottom(); // 스크롤 조정 추가
             })
             .catch(error => {
@@ -138,7 +148,7 @@ export default {
             });
 
         this.messages.push({
-          senderID: "User", // 회원가입 한 이름
+          senderID: this.email, // 회원가입 한 이름
           message: this.newMessage,
           timestamp: formattedTime
         });
@@ -146,7 +156,40 @@ export default {
         this.newMessage = "";
       }
     },
+    openContextMenu(event, message) {
+      this.contextMenuMessage = message;
+      this.contextMenuStyle = {
+        left: `${event.clientX}px`,
+        top: `${event.clientY}px`
+      };
+      this.contextMenuVisible = true;
+      document.addEventListener("click", this.closeContextMenu);
+    },
+    closeContextMenu() {
+      this.contextMenuVisible = false;
+      document.removeEventListener("click", this.closeContextMenu);
+    },
+    deleteChat(message) {
+      if (message && message.senderID === this.email) {
+        const messageId = message._id;
+        axios
+            .delete(`http://localhost:8080/cooper-chat/deleteChat`, {
+              params: {
+                messageId: messageId,
+                collectionName: this.workspaceId
+              }
+            })
+            .then(response => {
+              console.log("메시지 삭제 성공:", response.data);
+              this.messages = this.messages.filter(m => m._id !== messageId);
+            })
+            .catch(error => {
+              console.error("메시지 삭제 실패:", error);
+            });
+      }
 
+      this.contextMenuVisible = false;
+    },
     scrollToBottom() {
       this.$nextTick(() => {
         const container = this.$el.querySelector(".body-middle");
@@ -154,26 +197,26 @@ export default {
           container.scrollTop = container.scrollHeight;
         }
       });
-    },
-
+    }
   },
   watch: {
-    workspaceName(newWorkspaceName) {
-      if (newWorkspaceName) {
-        this.connect(newWorkspaceName);
-        this.loadMessage(newWorkspaceName);
+    workspaceId(newWorkspaceId) {
+      if (newWorkspaceId) {
+        this.connect(newWorkspaceId);
+        this.loadMessage(newWorkspaceId);
       }
     }
   },
   mounted() {
-    if (this.workspaceName) {
-      this.connect(this.workspaceName);
-      this.loadMessage(this.workspaceName);
+    if (this.workspaceId) {
+      this.connect(this.workspaceId);
+      this.loadMessage(this.workspaceId);
     }
     this.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   }
 };
 </script>
+
 
 <style scoped>
 .chat-component {
@@ -209,7 +252,6 @@ export default {
 
 .messages {
   height: 100%;
-  padding: 10px;
   display: flex;
   flex-direction: column;
   font-size: 13px;
@@ -230,7 +272,7 @@ export default {
 }
 
 .message {
-  margin-bottom: 10px;
+
   padding: 5px 10px;
   border-radius: 5px;
   position: relative;
@@ -245,24 +287,20 @@ export default {
 .message-container {
   display: flex;
 }
-
 .my-stamp {
   font-size: 10px;
   color: #999;
   bottom: 0;
   margin-right: 5px;
 }
-
 .other-stamp {
   font-size: 10px;
   color: #999;
   bottom: 0;
   margin-left: 5px;
 }
-
 .my-message {
   align-self: flex-end; /* 사용자 메시지를 오른쪽에 정렬 */
-  padding: 10px;
   border-radius: 5px;
   display: flex;
   flex-direction: row;
