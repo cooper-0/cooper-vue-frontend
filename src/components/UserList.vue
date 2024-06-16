@@ -1,10 +1,10 @@
 <template>
     <div class="user-icons">
         <ul>
-          <li v-for="user in users.slice(0, 5)" :key="user.id" class="user-icon" :style="{ backgroundColor: user.color }">
+          <li v-for="user in UserList.slice(0, 5)" :key="user.email" class="user-icon" :style="{ backgroundColor: user.color }">
             {{ user.name.slice(-2) }}
           </li>
-          <li v-if="users.length > 5" 
+          <li v-if="UserList.length > 5" 
             class="extra-users"
             @mouseover="showTooltip=true" @mouseleave="showTooltip=false"
             :style="{ backgroundColor: '#6A5ACD'}">
@@ -27,87 +27,80 @@
   </template>
   
   <script>
-  import SockJS from 'sockjs-client';
-  import Stomp from 'webstomp-client';
-  
   export default {
+    props: {
+      users: Array,
+      subscribers: Array,
+    },
     data() {
       return {
-        // UI 테스트용 users 배열
-        users: [
-          { id: 1, name: "김은서"},
-          { id: 2, name: "윤석규"},
-          { id: 3, name: "이준"},
-          { id: 4, name: "최대현"},
-          { id: 5, name: "박민진"},
-          { id: 6, name: "박세민"},
-          { id: 7, name: "박상훈"},
-          { id: 8, name: "김창화"},
-          { id: 9, name: "김은서"},
-        ], // UI 테스트용
-        currentUsers: [],
-        selectedWorkspace: {},
+        UserList: [],
         showTooltip: false,
         stompClient: null,
       };
     },
     methods: {
-      connectWebSocket() {
-        const socket = new SockJS('http://221.144.190.76:8000/ws/workspace');
+      // 이메일을 기반으로 색상을 생성하는 함수
+      getColorFromEmail(userEmail, opacity) {
+        let hash = 0;
+        for (let i = 0; i < userEmail.length; i++) {
+          hash = userEmail.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const r = (hash >> 24) & 0xFF;
+        const g = (hash >> 16) & 0xFF;
+        const b = (hash >> 8) & 0xFF;
 
-        this.stompClient = Stomp.over(socket);
-        this.stompClient.connect({}, () => {
-          this.stompClient.subscribe(`/sub/workspace/${this.selectedWorkspace.name}`, (message) => {
-            const data = JSON.parse(message.body);
-            this.handleUserChanges(data);
-          });
-        }, error => {
-          console.error('Error connecting to web socket', error);
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+      },
+      setColor(userEmail) {
+        let opacity = 0.2;
+
+        this.subscribers.some((subscriber) => {
+          if (subscriber === userEmail) {
+            opacity = 1.0;
+            return true;
+          } else {
+            return false;
+          }
         });
+
+        // RGBA 색상 코드 생성(접속 여부에 따라 투명도 조절)
+        return this.getColorFromEmail(userEmail, opacity);
       },
-      handleUserChanges(data) {
-        // 입장 또는 퇴장 데이터에 따라 현재 유저 목록 업데이트
-        if (data.message.includes("들어왔습니다")) {
-          this.currentUsers.push({
-            id: data.user.id,
-            name: data.user.name,
-            color: this.randomColor()
-          });
-        } else if (data.message.includes("나갔습니다")) {
-          this.currentUsers = this.currentUsers.filter(user => user.id !== data.user.id);
-        }
-      },
-      randomColor() {
-        // 16진수 색상 코드 생성
-        return `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
-      },
-      disconnectWebSocket() {
-        if (this.stompClient && this.stompClient.connected) {
-          this.stompClient.disconnect();
-        }
+      updateUserColors() {
+        // 색상을 변경
+        this.users.forEach(user => {
+          user.color = this.setColor(user.email);
+        });
+
+        this.UserList = this.users;
+
+        // 사용자 배열 정렬, 투명도가 1인 사용자를 우선
+        this.UserList.sort((a, b) => {
+          const opacityA = this.subscribers.includes(a.email) ? 1.0 : 0.2;
+          const opacityB = this.subscribers.includes(b.email) ? 1.0 : 0.2;
+          return opacityB - opacityA;
+        });
+
       },
     },
     mounted() {
-      // 테스트 사용자 배열에 색상 할당
-      this.users.forEach(user => {
-        if (!user.color) {
-          user.color = this.randomColor();
-        }
-      });
-      this.connectWebSocket();
-    },
-    beforeUnmount() {
-      this.disconnectWebSocket();
+      this.updateUserColors();
     },
     computed: {
       extraUsers() {
-        return this.users.slice(5).map(user => ({
+        return this.UserList.slice(5).map(user => ({
           ...user,
-          color: this.randomColor() || this.randomColor() // 색상이 없을 경우에만 새 색상 할당
+          // color: this.setColor() || this.setColor() // 색상이 없을 경우에만 새 색상 할당
         }));
       }
     },
-  }
+    watch: {
+      subscribers() {
+        this.updateUserColors();
+      }
+    }
+  };
   </script>
   
   <style scoped>

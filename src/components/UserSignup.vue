@@ -45,7 +45,7 @@
         />
       </div>
       <div class="button-container">
-        <button type="submit">Sign Up</button>
+        <button :class="{'active-button': isFormValid}" type="submit">Sign Up</button>
       </div>
       <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
     </form>
@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import axios from "../axios"; // 경로에 맞게 수정
 import { useRouter } from "vue-router";
 
@@ -67,13 +67,17 @@ export default {
     const errorMessage = ref("");
     const router = useRouter();
 
+    const isFormValid = computed(() => {
+      return email.value !== "" && 
+             password.value !== "" && 
+             password.value.length >= 8 && 
+             password.value === checkedPassword.value && 
+             name.value !== "";
+    });
+
     const signup = async () => {
-      if (password.value.length < 8){
-        errorMessage.value = "비밀번호를 8자 이상으로 입력해주세요";
-        return;
-      }
-      if (password.value !== checkedPassword.value) {
-        errorMessage.value = "비밀번호가 맞지 않습니다.";
+      if (!isFormValid.value) {
+        errorMessage.value = "모든 항목을 올바르게 입력해주세요.";
         return;
       }
 
@@ -103,6 +107,7 @@ export default {
       name,
       errorMessage,
       signup,
+      isFormValid,
     };
   },
 };
@@ -168,8 +173,16 @@ button {
   cursor: pointer;
 }
 
+button.active-button {
+  background-color: blue;
+}
+
 button:hover {
   background-color: rgb(191, 191, 191);
+}
+
+button.active-button:hover {
+  background-color: darkblue;
 }
 
 .error-message {

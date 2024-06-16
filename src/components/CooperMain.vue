@@ -31,8 +31,8 @@
       />
 
       <UserList v-if="selectedWorkspace"
-                :users="users"
-                :subscribers="subscribers"
+        :users="users"
+        :subscribers="subscribers"
       />
 
       <button v-if="selectedWorkspace" @click="toggleDrawer" class="drawer-toggle" :class="{ 'opened': isDrawerOpen }">
@@ -229,7 +229,11 @@ export default {
         const fd = new FormData();
         fd.append('name', newWorkspace.name);
 
-        axios.post(`/cooper-docs/workspace/${newWorkspace.id}`, fd).then(result => {
+        axios.post(`/cooper-docs/workspace/${newWorkspace.id}`, fd, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }).then(result => {
           this.workspaces = result.data;
           // 전체 접속자들에게 워크스페이스 생성 메시지 전송
           this.stompClient.send(`/pub/workspace`, JSON.stringify({type: "workspace", userId: this.userId, workspaces: result.data, workspaceId: newWorkspace.id}), {});
@@ -275,7 +279,11 @@ export default {
         // MySQL 연동
         const fd = new FormData();
         fd.append('doc_name', newDocument.name);
-        axios.post(`/cooper-docs/workspace/${this.selectedWorkspace.id}/document/${newDocument.id}`, fd).then(result => {
+        axios.post(`/cooper-docs/workspace/${this.selectedWorkspace.id}/document/${newDocument.id}`, fd, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }).then(result => {
           this.documents = result.data;
           // 전체 접속자들에게 문서 생성 메시지 전송
           this.stompClient.send(`/pub/workspace`, JSON.stringify({type: "document", userId: this.userId, documents: result.data, workspaceId: this.selectedWorkspace.id}), {});
