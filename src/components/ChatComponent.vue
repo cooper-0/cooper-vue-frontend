@@ -70,9 +70,7 @@ export default {
       const socket = new SockJS("http://221.144.190.76:8000/chat");
       this.stompClient = Stomp.over(socket);
 
-      this.stompClient.connect(
-          {},
-          frame => {
+      this.stompClient.connect({}, frame => {
             console.log("Chat Connected: " + frame);
 
             this.subscriptionStateWs = this.stompClient.subscribe(`/topic/${workspaceId}`, message => {
@@ -121,39 +119,57 @@ export default {
       const formattedMinute = minute.toString().padStart(2, "0");
       return `${period} ${formattedHour}시 ${formattedMinute}분`;
     },
+    // sendMessage() {
+    //   if (this.newMessage.trim() !== "") {
+    //     const currentTime = new Date();
+    //     const formattedTime = this.formatTimestamp(currentTime);
+
+    //     const messageData = {
+    //       messageType: "TALK",
+    //       roomId: this.workspaceId, // WorkspaceId를 사용
+    //       senderID: this.email, // 회원가입 한 이름
+    //       senderEmail: "user@example.com", // 회원가입 한 이메일
+    //       message: this.newMessage,
+    //       timestamp: currentTime
+    //     };
+    //     console.log("Sending message data:", messageData);
+    //     console.log(this.workspaceId)
+    //     axios
+    //         .post(`/cooper-chat/message?collectionName=${this.workspaceId}`, messageData)
+    //         .then(response => {
+    //           console.log("Message sent successfully:", response.data);
+    //           console.log(messageData.senderID, ": ", messageData.message);
+    //           this.scrollToBottom(); // 스크롤 조정 추가
+    //         })
+    //         .catch(error => {
+    //           console.error("전송 실패:", error);
+    //         });
+
+    //     this.messages.push({
+    //       senderID: this.email, // 회원가입 한 이름
+    //       message: this.newMessage,
+    //       timestamp: formattedTime
+    //     });
+
+    //     this.newMessage = "";
+    //   }
+    // },
     sendMessage() {
       if (this.newMessage.trim() !== "") {
         const currentTime = new Date();
-        const formattedTime = this.formatTimestamp(currentTime);
 
         const messageData = {
-          messageType: "TALK",
-          roomId: this.workspaceId, // WorkspaceId를 사용
-          senderID: this.email, // 회원가입 한 이름
-          senderEmail: "user@example.com", // 회원가입 한 이메일
+          senderID: this.email,
+          senderEmail: this.senderEmail,
           message: this.newMessage,
-          timestamp: currentTime
+          timestamp: this.formatTimestamp(currentTime)
         };
-        console.log("Sending message data:", messageData);
-        console.log(this.workspaceId)
-        axios
-            .post(`/cooper-chat/message?collectionName=${this.workspaceId}`, messageData)
-            .then(response => {
-              console.log("Message sent successfully:", response.data);
-              console.log(messageData.senderID, ": ", messageData.message);
-              this.scrollToBottom(); // 스크롤 조정 추가
-            })
-            .catch(error => {
-              console.error("전송 실패:", error);
-            });
 
-        this.messages.push({
-          senderID: this.email, // 회원가입 한 이름
-          message: this.newMessage,
-          timestamp: formattedTime
-        });
+        this.stompClient.send(`/app/${this.workspaceId}`, JSON.stringify(messageData),  {});
 
-        this.newMessage = "";
+        this.scrollToBottom();
+
+        this.newMessage = ""; // 전송 후 입력 필드 비우기
       }
     },
     openContextMenu(event, message) {

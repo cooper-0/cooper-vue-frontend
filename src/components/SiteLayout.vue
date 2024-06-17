@@ -34,7 +34,9 @@
       <DocumentEditor v-if="isDrawerOpen && selectedDocument" />
     </div>
     <div class="voice-chat">
-    <VoiceChat v-if="isChatVisible && selectedWorkspace" />
+    <VoiceChat v-if="isChatVisible && selectedWorkspace"
+        :selectedWorkspace="selectedWorkspace"
+        :userList="users" />
     </div>
   </div>
 </template>
@@ -57,6 +59,7 @@ export default {
   props: {
     workspaces: Array,
     documents: Array,
+    users: Array,
     selectedWorkspace: Object,
     selectedDocument: Object,
     connectionStateWs: Object,

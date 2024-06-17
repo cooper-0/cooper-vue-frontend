@@ -3,6 +3,7 @@
     <SiteLayout
         :workspaces="workspaces"
         :documents="documents"
+        :users="users"
         :selectedWorkspace="selectedWorkspace"
         :selectedDocument="selectedDocument"
         :connectionStateWs="connectionStateWs"
